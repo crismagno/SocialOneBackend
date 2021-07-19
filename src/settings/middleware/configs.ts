@@ -16,6 +16,13 @@ const publicRoutes = {
     path: [
         "/user/signin",
         "/user/signup",
+        // "/code/validate",
+        /^\/files\/.*/,
+        // "/chat",
+        // "/chat/by_user",
+        // "/chat/by_chat_id",
+        // "/message/by_chat_id",
+        // "/message/create",
     ],
 }
 

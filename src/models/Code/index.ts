@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 import { ICodeSchema } from "./types";
 
-const CodeSchema = new Schema({
+const CodeSchema: Schema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
         ref: "User"
@@ -9,6 +9,10 @@ const CodeSchema = new Schema({
     code: {
         type: String,
         required: true
+    },
+    type: {
+        type: String,
+        enum: ["VERIFY_CODE", "CHANGE_EMAIL"]
     }
 }, {
     timestamps: true,

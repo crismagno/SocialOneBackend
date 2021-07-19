@@ -1,13 +1,13 @@
 import User from "./../../models/User/index";
 import { Request, Response } from "express";
 import { IUserSchema } from "../../models/User/types";
-import { IUserWithToken } from "./types";
+import { IUserWithToken, TUpdateProfileInfo } from "./types";
 import { IUserGenerateToken } from "../../settings/token/types";
 import { validateEmail } from "./../../helpers/global";
 import Email from "../../services/email";
-import Code from "../../controllers/Code";
 import Token from "../../settings/token";
 import { scheduleValidateUserActive } from "./../../services/schedule";
+import GlobalSocket from "../../helpers/socket";
 const bcrypt = require("bcrypt");
 
 class UserController {
@@ -15,14 +15,39 @@ class UserController {
 
   public getUsers = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const users: IUserSchema[] = await User.find();
+      const { searchValue, skip, limit } = req.body;
+
+      const searchValueRegex: any = new RegExp(searchValue, "ig");
+
+      const users: IUserSchema[] = await User.find(
+        {
+          $or: [{ fullName: searchValueRegex }, { email: searchValueRegex }],
+          active: true,
+        },
+        {
+          _id: 1,
+          fullName: 1,
+          email: 1,
+          avatar: 1,
+          online: 1,
+          active: 1,
+        }
+      )
+        .skip(parseInt(skip))
+        .limit(parseInt(limit))
+        .sort({ createdAt: -1 });
+
       return res.status(200).json(users);
     } catch (error) {
-      return res.status(400).json(error);
+      console.log(`Error to get users`, error)
+      return res.status(400).json({ messasge: `Error to get users` });
     }
   };
 
-  public signIn = async (req: Request, res: Response): Promise<void | Response> => {
+  public signIn = async (
+    req: Request,
+    res: Response
+  ): Promise<void | Response> => {
     try {
       const { email, password } = req.body;
 
@@ -57,18 +82,13 @@ class UserController {
 
       res.status(201).json(userWithToken);
 
-      const code = await Code.newCode(userDB._id);
+      await Email.emailWelcome(userDB);
 
-      if (!!code.trim()) {
-        await Email.emailWelcome({
-          to: `${userDB.email}`,
-          fullName: `${userDB.fullName}`,
-          code,
-        });
-      }
+      console.log(`Success to do signIn Email ${email}`);
 
       return;
     } catch (error) {
+      console.log(`Error to do signIn Email ${req.body.email}`, error);
       return res.status(400).json({ message: "Error Social network" });
     }
   };
@@ -86,14 +106,17 @@ class UserController {
       if (!validateEmail(email))
         return res.status(409).json({ message: "Format email invalid" });
 
-      const userDB: IUserSchema[] | null = await User.find({
-        $or: [{ email }, { phone }],
-      });
+      const userDB: IUserSchema | null = await User.findOne(
+        {
+          $or: [{ email }, { phone }],
+        },
+        { email: 1, phone: 1 }
+      );
 
-      if (userDB && userDB.length > 0 && userDB[0].email === email)
+      if (userDB && userDB.email === email)
         return res.status(409).json({ message: "Email not allowed" });
 
-      if (userDB && userDB.length > 0 && userDB[0].phone === phone)
+      if (userDB && userDB.phone === phone)
         return res.status(409).json({ message: "Phone not allowed" });
 
       const passwordWithBcrypt = bcrypt.hashSync(password, this.saltRounds);
@@ -124,19 +147,574 @@ class UserController {
       // validate if user active account or delete user
       scheduleValidateUserActive(user._id);
 
-      const code = await Code.newCode(user._id);
+      await Email.emailWelcome(user);
 
-      if (!!code.trim()) {
-        await Email.emailWelcome({
-          to: `${user.email}`,
-          fullName: `${user.fullName}`,
-          code,
+      return;
+    } catch (error) {
+      console.log(`
+        Error to create user: 
+        [user email: ${req.body.email}]
+        [user phone: ${req.body.phone}]`, 
+        error
+      );
+      return res.status(409).json({
+        message: "Error Social network",
+      });
+    }
+  };
+
+  public getUserById = async (
+    req: Request,
+    res: Response
+  ): Promise<void | Response> => {
+    try {
+      const { userId } = req.body;
+
+      if (!userId)
+        return res.status(400).json({
+          message: "Data informed is invalid",
+        });
+
+      const userDB: IUserSchema | null = await User.findById({
+        _id: userId,
+      });
+
+      if (!userDB)
+        return res.status(400).json({
+          message: "User not exists",
+        });
+
+      const payload: IUserGenerateToken = {
+        _id: userDB._id,
+        expires: Date.now() + 1000 * 60 * 24,
+      };
+
+      const userWithToken: IUserWithToken = {
+        _id: `${userDB._id}`,
+        fullName: `${userDB.fullName}`,
+        email: `${userDB.email}`,
+        phone: `${userDB.phone}`,
+        avatar: `${userDB.avatar}`,
+        token: Token.generate(payload),
+      };
+
+      return res.status(201).json(userWithToken);
+    } catch (error) {
+      console.log(`
+        Error to get user by id: [userId: ${req.body.userId}]`, 
+        error
+      );
+      return res.status(400).json({
+        message: "Error get user by id",
+      });
+    }
+  };
+
+  /**
+   * update online and socketId of User
+   */
+  public connectUserUpdateOnlineAndSocketId = async (
+    userId: string,
+    socketId: string
+  ): Promise<any> => {
+    try {
+      if (!userId || !socketId) {
+        console.log("Connect socket: userId or socketId empty...");
+        return;
+      }
+
+      await User.updateOne(
+        { _id: userId },
+        {
+          $set: {
+            online: true,
+          },
+          $addToSet: {
+            socketId: socketId,
+          },
+        }
+      );
+
+      console.log(
+        `Connect socket: User update your property online and socketId 
+        [userId: ${userId}] 
+        [socketId: ${socketId}]`);
+    } catch (error) {
+      console.log(
+        `Connect socket: Erro for try update online and socketId 
+        [userId: ${userId}]
+        [socketId: ${socketId}]`,
+        error
+      );
+    }
+  };
+
+  /**
+   * update online and socketId of User
+   */
+  public disconnectUserUpdateBySocketId = async (
+    socketId: string
+  ): Promise<IUserSchema | void | null> => {
+    try {
+      if (!socketId) {
+        console.log("Disconnect socket: socketId empty...");
+        return;
+      }
+
+      const userDB = await User.findOne(
+        { socketId: { $in: [socketId] } },
+        {
+          socketId: 1,
+        }
+      );
+
+      const userUpdated: IUserSchema | null = await User.findOneAndUpdate(
+        { socketId: { $in: [socketId] } },
+        {
+          $set: {
+            online:
+              userDB?.socketId && userDB?.socketId?.length <= 1 ? false : true,
+          },
+          $pull: {
+            socketId: socketId,
+          },
+        },
+        { new: true }
+      );
+
+      if (!userUpdated) {
+        console.log(
+          `Disconnect socket: User not found by socketId [socketId: ${socketId}]`
+        );
+        return null;
+      }
+
+      console.log(
+        `Disconnect socket: User update your property online and socketId
+        [userId: ${userUpdated._id}] 
+        [socketId: ${socketId}]`);
+
+      return userUpdated;
+    } catch (error) {
+      console.log(
+        "Disconnect socket: Erro for try update online and socketId",
+        error
+      );
+    }
+  };
+
+  /**
+   * logout
+   */
+  public logoutUser = async (
+    req: Request,
+    res: Response
+  ): Promise<void | Response> => {
+    try {
+      const { userId, socketId } = req.body;
+      if (!userId || !socketId)
+        return res.status(400).json({
+          message: "Data informed is invalid",
+        });
+
+      const userDB: IUserSchema | null = await User.findById(
+        {
+          _id: userId,
+        },
+        {
+          socketId: 1,
+        }
+      );
+
+      const userUpdated: IUserSchema | null = await User.findByIdAndUpdate(
+        {
+          _id: userId,
+        },
+        {
+          $set: {
+            online:
+              userDB?.socketId && userDB?.socketId?.length <= 1 ? false : true,
+          },
+          $pull: {
+            socketId: socketId,
+          },
+        },
+        {
+          new: true,
+        }
+      );
+
+      res.status(200).json({
+        message: "Logout User Success...",
+        type: "success",
+      });
+
+      if (userUpdated?.socketId?.length === 0) {
+        // inform that user is offline
+        GlobalSocket.informUserOffLine(userId);
+      }
+
+      console.log(`Logout User: ${userUpdated?.email}, userId: ${userUpdated?._id}`);
+
+      return;
+    } catch (error) {
+      console.log(`Error logout 
+        [userId: ${req.body.userId}]
+        [socketId: ${req.body.socketId}]
+      `, error);
+      return res.status(400).json({
+        message: "Error logout user...",
+      });
+    }
+  };
+
+  /**
+   * Alter avatar user
+   */
+  public alterAvatar = async (
+    req: Request,
+    res: Response
+  ): Promise<void | Response> => {
+    try {
+      const { userId } = req.body;
+      const { filename } = req.file;
+
+      if (!userId)
+        return res.status(409).json({ message: "Data body malformated" });
+
+      const updateUserAvatar: IUserSchema | null = await User.findByIdAndUpdate(
+        {
+          _id: userId,
+        },
+        {
+          $set: {
+            avatar: filename,
+          },
+        },
+        { new: true }
+      );
+
+      if (!updateUserAvatar)
+        return res.status(409).json({ message: "Error user is don´t exists!" });
+
+      // socket to inform user alter avatar
+      GlobalSocket.userUpdateProfileInfo({
+        userId,
+        property: "avatar",
+        newValue: String(updateUserAvatar.avatar),
+      });
+
+      console.log(`Success to alter avatar: ${updateUserAvatar.fullName}`);
+
+      return res.status(200).json({
+        message: "avatar user alter with success",
+        avatar: updateUserAvatar?.avatar,
+      });
+    } catch (error) {
+      console.log(`Error to alter avatar [userId: ${req.body.userId}]`);
+      return res.status(409).json({ message: "Error to alter avatar" });
+    }
+  };
+
+  /**
+   * This method is used to clear sockets and status online, all time that api main restart
+   */
+  public updateSocketAllUsers = async () => {
+    try {
+      await User.updateMany(
+        {},
+        {
+          $set: {
+            socketId: [],
+            online: false,
+          },
+        }
+      );
+      console.log(`Success at update socketID and online all users`);
+    } catch (error) {
+      console.log(`Error at update socketID and online all users`, error);
+    }
+  };
+
+  /**
+   * Alter info user, like fullName, email or phone
+   * @param req
+   * @param res
+   */
+  public updateProfileInfo = async (
+    req: Request,
+    res: Response
+  ): Promise<void | Response> => {
+    try {
+      const typePropertyValid: TUpdateProfileInfo = [
+        "fullName",
+        "email",
+        "phone",
+      ];
+      const { userId, property, newValue } = req.body;
+
+      // valide data of body request
+      if (!userId || !property || !newValue)
+        return res.status(409).json({
+          message: "Format body not is correct",
+        });
+
+      // valid if property to update is correct
+      if (typePropertyValid.indexOf(property) <= -1)
+        return res.status(409).json({
+          message: "Property passed to update info isn´t correct",
+        });
+
+      // valid property if equal -> email and if email is valid
+      if (property === "email" && !validateEmail(newValue))
+        return res.status(409).json({
+          message: "Format email invalid",
+        });
+
+      const userDB: IUserSchema | null = await User.findById(
+        { _id: userId },
+        { email: 1, phone: 1, fullName: 1 }
+      );
+
+      // valid user exists
+      if (!userDB)
+        return res.status(409).json({
+          message: "User not found",
+        });
+
+      // if fullName is the same
+      if (property === "fullName" && userDB.fullName === newValue)
+        return res.status(409).json({
+          message: "Full name is same!",
+        });
+
+      // if email is the same
+      if (property === "email" && userDB.email === newValue)
+        return res.status(409).json({
+          message: "Email is same!",
+        });
+
+      // if phone is the same
+      if (property === "phone" && userDB.phone === newValue)
+        return res.status(409).json({
+          message: "Phone is same!",
+        });
+
+      // query of users that have newValue passed based on property
+      const query = {
+        _id: { $ne: userId },
+        [`${property}`]: newValue,
+      };
+
+      const findUserHasTheSameNewValue: IUserSchema | null = await User.findOne(
+        query,
+        { _id: 1 }
+      );
+
+      if (findUserHasTheSameNewValue)
+        return res.status(409).json({
+          message: `${property} already exists!`,
+        });
+
+      const userUpdated: IUserSchema | null | any =
+        await User.findByIdAndUpdate(
+          {
+            _id: userId,
+          },
+          {
+            $set: {
+              [property]: newValue,
+            },
+          },
+          {
+            new: true,
+          }
+        );
+
+      res.status(200).json({
+        message: `${property} updated with success!!!`,
+        [`${property}`]: userUpdated[property],
+      });
+
+      // only emit this socket if property isn´t email
+      if (property !== "email") {
+        GlobalSocket.userUpdateProfileInfo({
+          userId,
+          property,
+          newValue,
         });
       }
 
       return;
     } catch (error) {
-      return res.status(409).json({ message: "Error Social network" });
+      return res.status(400).json({
+        message: "Erro to update profile",
+      });
+    }
+  };
+
+  /**
+   * solicit change email user and generate code to emial
+   * @param req
+   * @param res
+   */
+  public changeEmail = async (
+    req: Request,
+    res: Response
+  ): Promise<void | Response> => {
+    try {
+      const { userId, newEmail = null } = req.body;
+
+      if (!userId || !newEmail)
+        return res.status(400).json({ message: "Body bad format" });
+
+      // valid property if equal -> email and if email is valid
+      if (!validateEmail(newEmail))
+        return res.status(409).json({
+          message: "Format email invalid",
+        });
+
+      const userDB = await User.findById(
+        { _id: userId },
+        { emailChange: 1, email: 1 }
+      );
+
+      if (!userDB) return res.status(400).json({ message: "User not found" });
+
+      // if email is the same
+      if (userDB.email === newEmail)
+        return res.status(409).json({
+          message: "Email is same!",
+        });
+
+      if (userDB?.emailChange?.trim())
+        return res.status(400).json({
+          message: "Already exists email to change",
+          value: userDB?.emailChange,
+        });
+
+      // query of users that have newValue passed based on property
+      const findUserHasTheSameNewValue: IUserSchema | null = await User.findOne(
+        {
+          _id: { $ne: userId },
+          email: newEmail,
+        },
+        { _id: 1 }
+      );
+
+      if (findUserHasTheSameNewValue)
+        return res.status(409).json({
+          message: `Email already exists!`,
+        });
+
+      const userUpdated: IUserSchema | null = await User.findByIdAndUpdate(
+        {
+          _id: userId,
+        },
+        {
+          $set: {
+            emailChange: newEmail,
+          },
+        },
+        {
+          new: true,
+        }
+      );
+
+      if (!userUpdated)
+        return res.status(400).json({ message: "User updated not found" });
+
+      res.status(200).json({
+        message: `Espect only validate code to email change ${userUpdated?.emailChange}`,
+        value: userUpdated?.emailChange,
+      });
+
+      await Email.emailToRequestChangeEmailUser(userUpdated);
+
+      console.log(`Success to change email [userId: ${userId}]`);
+
+      return;
+    } catch (error) {
+      console.log(`Error to change email [userId: ${req.body.userId}]`, error);
+      return res.status(400).json({ message: "Error to change email" });
+    }
+  };
+
+  /**
+   * Verify if user has email pending for change
+   * @param req
+   * @param res
+   */
+  public validateExistsEmailChange = async (
+    req: Request,
+    res: Response
+  ): Promise<void | Response> => {
+    try {
+      const { userId } = req.body;
+
+      if (!userId) return res.status(400).json({ message: "Body bad format" });
+
+      const userDB = await User.findById({ _id: userId }, { emailChange: 1 });
+
+      if (!userDB) return res.status(400).json({ message: "User not found" });
+
+      if (!userDB?.emailChange?.trim())
+        return res.status(200).json({
+          message: "Email change empty",
+          value: null,
+        });
+
+      return res.status(200).json({
+        message: `Email change ${userDB.emailChange}`,
+        value: userDB.emailChange,
+      });
+    } catch (error) {
+      console.log(`Error to get validate email change: [userId: ${req.body.userId}]`);
+      return res
+        .status(400)
+        .json({ message: "Error to get validate email change" });
+    }
+  };
+
+  /**
+   * cancel the email that is with pending change
+   * @param req
+   * @param res
+   */
+  public cancelEmailPendingOfChange = async (
+    req: Request,
+    res: Response
+  ): Promise<void | Response> => {
+    try {
+      const { userId } = req.body;
+
+      if (!userId) return res.status(400).json({ message: "Body bad format" });
+
+      const userUpdated = await User.findByIdAndUpdate(
+        { _id: userId },
+        {
+          $set: {
+            emailChange: "",
+          },
+        },
+        {
+          new: true,
+        }
+      );
+
+      if (!userUpdated)
+        return res.status(400).json({ message: "User updated not found" });
+      
+      console.log(`User email to change canceled with success: ${userId}`);
+
+      return res.status(200).json({
+        message: `User email to change canceled with success!`,
+      });
+    } catch (error) {
+      console.log(`Error on cancel email to change: [userId: ${req.body.userId}]`);
+      return res
+        .status(400)
+        .json({ message: "Error on cancel email to change" });
     }
   };
 }

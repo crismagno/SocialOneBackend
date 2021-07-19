@@ -1,3 +1,5 @@
+import { Schema } from "mongoose";
+
 export interface ITemplate {
     subject: string;
     text?: (value: string) => string;
@@ -7,16 +9,18 @@ export interface ITemplate {
   
   export interface ITemplatesEmail {
     welcome: ITemplate;
+    resendVerifyCode: ITemplate;
+    changeEmail: ITemplate;
   }
   
   export interface IBodySendEmail {
-      to: string
-      subject: string
-      text?: string
-      html?: string
+      to: String | String[];
+      subject: string;
+      text?: string;
+      html?: string;
   }
-  
-  export interface IBodyEmailWelcome {
+
+  export interface IBodyEmailResendVerifyCode {
       to: string;
       fullName: string;
       code: string;

@@ -1,5 +1,3 @@
-import server from "./app/index";
+import App from "./app/index";
 
-server.listen(process.env.PORT, () => 
-    console.log(`Server running on -> http://localhost:${process.env.PORT}`)
-);
+new App().listen(); // listening the server

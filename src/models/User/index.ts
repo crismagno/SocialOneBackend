@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 import { IUserSchema } from "./types";
 
-const UserSchema = new Schema({
+const UserSchema: Schema = new Schema({
     fullName: {
         type: String,
         required: true,
@@ -22,7 +22,7 @@ const UserSchema = new Schema({
     },
     avatar: {
         type: String,
-        default: "",
+        default: null,
     },
     active: {
         type: Boolean,
@@ -32,6 +32,14 @@ const UserSchema = new Schema({
         type: Boolean,
         default: false,
     },
+    socketId: {
+        type: Array,
+        default: []
+    },
+    emailChange: {
+        type: String,
+        default: null
+    }
 }, {
     timestamps: true,
 });

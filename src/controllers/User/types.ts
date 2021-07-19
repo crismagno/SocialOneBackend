@@ -6,3 +6,5 @@ export interface IUserWithToken {
     avatar?: string;
     token: string;
 };
+
+export type TUpdateProfileInfo =  ["fullName", "email", "phone"]

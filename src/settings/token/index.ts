@@ -1,15 +1,15 @@
+require('dotenv').config({ path: `${__dirname}/../../../.env` });
 import { Request } from "express";
 import { IUserGenerateToken } from "./types";
-
-const jwt = require('jwt-simple')
-const mongoose = require('mongoose')
+// const jwt = require('jwt-simple')
+const jwt = require("jsonwebtoken");
 
 class Token {
 
     private JWT_SECRET_KEY: string = String(process.env.JWT_SECRET_KEY); 
 
     public generate = (payload: IUserGenerateToken): string => {
-        return jwt.encode(payload, this.JWT_SECRET_KEY);
+        return jwt.sign(payload, this.JWT_SECRET_KEY);
     };
 
     public decode = async (req: Request) => {
