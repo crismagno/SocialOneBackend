@@ -14,6 +14,7 @@ const shouldCompress = (req: Request, res: Response) => {
 
 const publicRoutes = {
     path: [
+        "/",
         "/user/signin",
         "/user/signup",
         // "/code/validate",
