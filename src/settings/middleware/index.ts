@@ -1,6 +1,6 @@
 require("dotenv").config({ path: `${__dirname}/../.env` });
 import cors from "cors";
-import { json, urlencoded, Request, Response } from "express";
+import express, { json, urlencoded, Request, Response } from "express";
 import configs from "./configs";
 const logger = require("morgan");
 const compression = require("compression");
@@ -9,6 +9,7 @@ const path = require('path');
 
 module.exports = (app: any) => {
   
+  app.use(express.static(path.resolve(__dirname+ `../../../pagesHtml`)));
   app.get("/files", (req: Request, res: Response): void => {
     res.sendFile(path.resolve(__dirname+ `../../../uploads/${req.query.file}`));
   });

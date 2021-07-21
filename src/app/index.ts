@@ -44,7 +44,7 @@ class App {
             locale: "en-us",
             logger: console,
             verbose: true,
-            extensions: [ ".js", ".json", ".node", ".ts" ],
+            extensions: [ ".js", ".json", ".node", ".ts", ".css" ],
             loggingType: "info"
         })
             .then("./settings/middleware/index.ts")
