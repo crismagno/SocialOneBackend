@@ -1,0 +1,27 @@
+.container-main {
+  height: 100vh;
+}
+
+.h1-1 {
+  font-size: 13rem;
+  background: -webkit-linear-gradient(45deg, #000, rgba(63, 141, 231, 0.952));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.h1-2 {
+  font-size: 3rem;
+  animation-delay: 0.7s;
+  margin-top: 120px;
+  color: rgba(63, 141, 231, 0.952);
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (max-width: 720px) {
+  .h1-1 {
+    font-size: 4rem;
+  }
+  .h1-2 {
+    font-size: 1rem;
+    margin-top: 40px;
+  }
+}
