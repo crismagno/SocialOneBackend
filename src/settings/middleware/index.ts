@@ -9,7 +9,7 @@ const path = require('path');
 
 module.exports = (app: any) => {
   
-  app.use(express.static(path.resolve(__dirname+ `../../../pagesHtml`)));
+  app.use(express.static(path.resolve(__dirname + `../../../views`)));
   app.get("/files", (req: Request, res: Response): void => {
     res.sendFile(path.resolve(__dirname+ `../../../uploads/${req.query.file}`));
   });
