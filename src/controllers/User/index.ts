@@ -717,6 +717,88 @@ class UserController {
         .json({ message: "Error on cancel email to change" });
     }
   };
+
+  public validatePassword = async (
+    req: Request,
+    res: Response
+  ): Promise<void | Response> => {
+    try {
+      const { userId, password } = req.body;
+
+      if (!userId || !password)
+        return res.status(400).json({ message: "Data informed is invalid" });
+
+      const userDB: IUserSchema | null = await User.findById(userId, { password: 1 });
+
+      if (!userDB)
+        return res.status(400).json({ message: "User is invalid" });
+
+      const passwordCompare = await bcrypt.compare(password, userDB.password);
+      if (!passwordCompare)
+        return res.status(400).json({ message: "Password invalid" });
+
+      return res.status(201)
+        .json({ 
+          message: "Password is valid", 
+          value: true 
+        });
+    } catch (error) {
+      console.log(`Error to do validate password USER_ID=> ${req.body.userId}`, error);
+      return res.status(400).json({ message: "Error Social network" });
+    }
+  };
+
+  /**
+   * solicit update password user 
+   * @param req
+   * @param res
+   */
+   public updatePassword = async (
+    req: Request,
+    res: Response
+  ): Promise<void | Response> => {
+    try {
+      const { userId, newPassword = null } = req.body;
+
+      if (!userId || !newPassword)
+        return res.status(400).json({ message: "Body bad format" });
+
+      const userDB = await User.findById(userId, { password: 1 });
+
+      if (!userDB) return res.status(400).json({ message: "User not found" });
+
+      // if password is the same
+      const passwordCompare = await bcrypt.compare(newPassword, userDB.password);
+      if (passwordCompare)
+        return res.status(400).json({ message: "Password is the same!" });
+
+      const newPasswordWithBcrypt = bcrypt.hashSync(newPassword, this.saltRounds);
+
+      const userUpdated: IUserSchema | null = await User.findByIdAndUpdate(
+        {
+          _id: userId,
+        },
+        {
+          $set: {
+            password: newPasswordWithBcrypt,
+          },
+        },
+        {
+          new: true,
+        }
+      );
+
+      if (!userUpdated)
+        return res.status(400).json({ message: "User updated not found" });
+
+      return res.status(200).json({
+        message: `Password updated with success!`
+      });
+    } catch (error) {
+      console.log(`Error to update password [userId: ${req.body.userId}]`, error);
+      return res.status(400).json({ message: "Error to update password" });
+    }
+  };
 }
 
 export default new UserController();

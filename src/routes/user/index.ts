@@ -32,4 +32,10 @@ module.exports = (app: Application): void => {
     
     app.route("/user/cancel_email_pending_change")
         .post(UserController.cancelEmailPendingOfChange);
+    
+    app.route("/user/validate_password")
+        .post(UserController.validatePassword);
+
+    app.route("/user/update_password")
+        .post(UserController.updatePassword);
 };
