@@ -55,8 +55,7 @@ class CodeController {
   private makeCode = (): string | null => {
     try {
       let result: string = "";
-      let characters: string =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      let characters: string = `${process.env.CHARACTERS}`;
       let charactersLength: number = characters.length;
       for (let i = 0; i < this.lengthCode; i++) {
         result += characters.charAt(

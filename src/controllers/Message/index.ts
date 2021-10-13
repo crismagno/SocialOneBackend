@@ -127,6 +127,7 @@ class MessageController {
 
       const messages: IMessageSchema[] | null = await Message.find({
         chat: chatId,
+        removeToUsers: { $ne: userId }
       })
         .skip(parseInt(skip))
         .limit(parseInt(limit))

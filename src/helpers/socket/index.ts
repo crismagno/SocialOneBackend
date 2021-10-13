@@ -3,11 +3,13 @@ import { Socket } from "socket.io";
 import {
   IInformUserLogout,
   IInformUserOnline,
+  ISetIdUserOnSeenMessages,
+  ISetSeenOnMessageChat,
   IUserMakingActionOnChat,
 } from "./types";
 import UserController from "./../../controllers/User";
 import { IUserSchema } from "../../models/User/types";
-import { IMessageCreateSchema } from "../../controllers/Message/types";
+import ChatController from "../../controllers/Chat/index";
 import { IMessageSchema } from "../../models/Message/types";
 class GlobalSocket {
   public static io: Socket;
@@ -37,13 +39,21 @@ class GlobalSocket {
           GlobalSocket.io
             .compress(true)
             .emit(`inform-user-is-online`, data.userId);
-        });
+        }); 
 
         // inform that user is typing
         socket.on(
           "user-is-making-action-on-chat",
           (data: IUserMakingActionOnChat) => {
             GlobalSocket.userIsMakingActionOnChat(data);
+          }
+        );
+
+        // atualizar o seen da mensagem setando o usuario
+        socket.on(
+          "set-seen-on-message-chat",
+          (data: ISetSeenOnMessageChat) => {
+            ChatController.setIdUserOnSeenMessageSingle(data);
           }
         );
 
@@ -129,9 +139,6 @@ class GlobalSocket {
   }) => {
     GlobalSocket.io
       .compress(true)
-      .emit(`message-created-by-chat-id-${data.chatId}`, data);
-    GlobalSocket.io
-      .compress(true)
       .emit(`message-created-by-chat-id-home`, data);
   };
 
@@ -146,9 +153,6 @@ class GlobalSocket {
   }) => {
     GlobalSocket.io
       .compress(true)
-      .emit(`messages-updated-by-chat-id-${data.chatId}`, data);
-    GlobalSocket.io
-      .compress(true)
       .emit(`messages-updated-by-chat-id-home`, data);
   };
 
@@ -161,11 +165,29 @@ class GlobalSocket {
   ): void => {
     GlobalSocket.io
       .compress(true)
-      .emit(`user-is-making-action-on-chat-by-chat-${data.chatId}`, data);
-    GlobalSocket.io
-      .compress(true)
       .emit(`user-is-making-action-on-chat-by-home`, data);
   };
+
+  /**
+   * Socket that inform update seen of messages of userId
+   * @param data
+   */
+  public static setIdUserOnSeenMessages = (data: ISetIdUserOnSeenMessages) => {
+
+    // dados que serap passados para o emit do socket
+    const dataSendSocket = { ...data };
+    delete dataSendSocket?.usersChat;
+
+    // validar os usuarios do chat
+    if (!data?.usersChat) return;
+
+    // enviar socket somente aos usuarios do chat passado
+    for (const userId of data?.usersChat) {
+      GlobalSocket.io
+        .compress(true)
+        .emit(`set-seen-messages-by-home-${userId}`, dataSendSocket);
+    }
+  }
 }
 
 export default GlobalSocket;
