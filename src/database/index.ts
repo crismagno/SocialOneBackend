@@ -1,21 +1,17 @@
 require('dotenv').config({ path: `${__dirname}/../../.env` });
 import mongoose from "mongoose";
 
-class DB {
+class SocialOneDataBase {
     private connectionStringAtlas: string = `${process.env.DB_ATLAS}`;
     private connectionStringLocal: string = `${process.env.DB_LOCAL}`;
-    private connectionStringDocker: string = `${process.env.DB_DOCKER}`;
-
-    constructor() {
-        this.connection();
-    }
     
-    private connection = async (): Promise<void> => {
+    public start = async (): Promise<void> => {
         try {
-            await mongoose.connect(this.connectionStringLocal, {
+            await mongoose.connect(process.env.NODE_ENV === "dev" ? this.connectionStringLocal : this.connectionStringAtlas, {
                 useNewUrlParser: true,
                 useFindAndModify: false,
-                useUnifiedTopology: true
+                useUnifiedTopology: true,
+                useCreateIndex: true
             });
             console.log("Database connected...")
         } catch (error) {
@@ -24,4 +20,4 @@ class DB {
     };
 }
 
-export default DB;
+export default SocialOneDataBase;

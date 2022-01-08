@@ -1,3 +1,3 @@
+require('dotenv').config({ path: `${__dirname}/../.env` });
 import App from "./app/index";
-
-new App().listen(); // listening the server
+new App().start(); // start server
