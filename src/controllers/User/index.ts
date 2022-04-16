@@ -2,7 +2,7 @@ import User from "./../../models/User/index";
 import { Request, Response } from "express";
 import { IUserSchema } from "../../models/User/types";
 import { IUserWithToken, TUpdateProfileInfo } from "./types";
-import { IUserGenerateToken } from "../../settings/token/types";
+import { IUserPayloadToken } from "../../settings/token/types";
 import { validateEmail } from "./../../helpers/global";
 import Email from "../../services/email";
 import Token from "../../settings/token";
@@ -39,7 +39,7 @@ class UserController {
 
       return res.status(200).json(users);
     } catch (error) {
-      console.log(`Error to get users`, error)
+      console.log(`Error to get users`, error);
       return res.status(400).json({ messasge: `Error to get users` });
     }
   };
@@ -66,7 +66,7 @@ class UserController {
       if (!passwordCompare)
         return res.status(400).json({ message: "Email or Password invalid" });
 
-      const payload: IUserGenerateToken = {
+      const payload: IUserPayloadToken = {
         _id: userDB._id,
         expires: Date.now() + 1000 * 60 * 24,
       };
@@ -128,7 +128,7 @@ class UserController {
         password: passwordWithBcrypt,
       });
 
-      const payload: IUserGenerateToken = {
+      const payload: IUserPayloadToken = {
         _id: user._id,
         expires: Date.now() + 1000 * 60 * 24,
       };
@@ -151,10 +151,11 @@ class UserController {
 
       return;
     } catch (error) {
-      console.log(`
+      console.log(
+        `
         Error to create user: 
         [user email: ${req.body.email}]
-        [user phone: ${req.body.phone}]`, 
+        [user phone: ${req.body.phone}]`,
         error
       );
       return res.status(409).json({
@@ -184,7 +185,7 @@ class UserController {
           message: "User not exists",
         });
 
-      const payload: IUserGenerateToken = {
+      const payload: IUserPayloadToken = {
         _id: userDB._id,
         expires: Date.now() + 1000 * 60 * 24,
       };
@@ -200,8 +201,9 @@ class UserController {
 
       return res.status(201).json(userWithToken);
     } catch (error) {
-      console.log(`
-        Error to get user by id: [userId: ${req.body.userId}]`, 
+      console.log(
+        `
+        Error to get user by id: [userId: ${req.body.userId}]`,
         error
       );
       return res.status(400).json({
@@ -238,7 +240,8 @@ class UserController {
       console.log(
         `Connect socket: User update your property online and socketId 
         [userId: ${userId}] 
-        [socketId: ${socketId}]`);
+        [socketId: ${socketId}]`
+      );
     } catch (error) {
       console.log(
         `Connect socket: Erro for try update online and socketId 
@@ -292,7 +295,8 @@ class UserController {
       console.log(
         `Disconnect socket: User update your property online and socketId
         [userId: ${userUpdated._id}] 
-        [socketId: ${socketId}]`);
+        [socketId: ${socketId}]`
+      );
 
       return userUpdated;
     } catch (error) {
@@ -354,14 +358,19 @@ class UserController {
         GlobalSocket.informUserOffLine(userId);
       }
 
-      console.log(`Logout User: ${userUpdated?.email}, userId: ${userUpdated?._id}`);
+      console.log(
+        `Logout User: ${userUpdated?.email}, userId: ${userUpdated?._id}`
+      );
 
       return;
     } catch (error) {
-      console.log(`Error logout 
+      console.log(
+        `Error logout 
         [userId: ${req.body.userId}]
         [socketId: ${req.body.socketId}]
-      `, error);
+      `,
+        error
+      );
       return res.status(400).json({
         message: "Error logout user...",
       });
@@ -669,7 +678,9 @@ class UserController {
         value: userDB.emailChange,
       });
     } catch (error) {
-      console.log(`Error to get validate email change: [userId: ${req.body.userId}]`);
+      console.log(
+        `Error to get validate email change: [userId: ${req.body.userId}]`
+      );
       return res
         .status(400)
         .json({ message: "Error to get validate email change" });
@@ -704,14 +715,16 @@ class UserController {
 
       if (!userUpdated)
         return res.status(400).json({ message: "User updated not found" });
-      
+
       console.log(`User email to change canceled with success: ${userId}`);
 
       return res.status(200).json({
         message: `User email to change canceled with success!`,
       });
     } catch (error) {
-      console.log(`Error on cancel email to change: [userId: ${req.body.userId}]`);
+      console.log(
+        `Error on cancel email to change: [userId: ${req.body.userId}]`
+      );
       return res
         .status(400)
         .json({ message: "Error on cancel email to change" });
@@ -728,32 +741,35 @@ class UserController {
       if (!userId || !password)
         return res.status(400).json({ message: "Data informed is invalid" });
 
-      const userDB: IUserSchema | null = await User.findById(userId, { password: 1 });
+      const userDB: IUserSchema | null = await User.findById(userId, {
+        password: 1,
+      });
 
-      if (!userDB)
-        return res.status(400).json({ message: "User is invalid" });
+      if (!userDB) return res.status(400).json({ message: "User is invalid" });
 
       const passwordCompare = await bcrypt.compare(password, userDB.password);
       if (!passwordCompare)
         return res.status(400).json({ message: "Password invalid" });
 
-      return res.status(201)
-        .json({ 
-          message: "Password is valid", 
-          value: true 
-        });
+      return res.status(201).json({
+        message: "Password is valid",
+        value: true,
+      });
     } catch (error) {
-      console.log(`Error to do validate password USER_ID=> ${req.body.userId}`, error);
+      console.log(
+        `Error to do validate password USER_ID=> ${req.body.userId}`,
+        error
+      );
       return res.status(400).json({ message: "Error Social network" });
     }
   };
 
   /**
-   * solicit update password user 
+   * solicit update password user
    * @param req
    * @param res
    */
-   public updatePassword = async (
+  public updatePassword = async (
     req: Request,
     res: Response
   ): Promise<void | Response> => {
@@ -768,11 +784,17 @@ class UserController {
       if (!userDB) return res.status(400).json({ message: "User not found" });
 
       // if password is the same
-      const passwordCompare = await bcrypt.compare(newPassword, userDB.password);
+      const passwordCompare = await bcrypt.compare(
+        newPassword,
+        userDB.password
+      );
       if (passwordCompare)
         return res.status(400).json({ message: "Password is the same!" });
 
-      const newPasswordWithBcrypt = bcrypt.hashSync(newPassword, this.saltRounds);
+      const newPasswordWithBcrypt = bcrypt.hashSync(
+        newPassword,
+        this.saltRounds
+      );
 
       const userUpdated: IUserSchema | null = await User.findByIdAndUpdate(
         {
@@ -792,10 +814,13 @@ class UserController {
         return res.status(400).json({ message: "User updated not found" });
 
       return res.status(200).json({
-        message: `Password updated with success!`
+        message: `Password updated with success!`,
       });
     } catch (error) {
-      console.log(`Error to update password [userId: ${req.body.userId}]`, error);
+      console.log(
+        `Error to update password [userId: ${req.body.userId}]`,
+        error
+      );
       return res.status(400).json({ message: "Error to update password" });
     }
   };

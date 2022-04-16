@@ -1,24 +1,27 @@
 require("dotenv").config({ path: `${__dirname}/../.env` });
 import cors from "cors";
-import express, { json, urlencoded, Request, Response } from "express";
+import express, { json, urlencoded, Request, Response, Express } from "express";
 import configs from "./configs";
 const logger = require("morgan");
 const compression = require("compression");
 const expressJWT = require("express-jwt");
-const path = require('path');
+const path = require("path");
 
-module.exports = (app: any) => {
-  
+module.exports = (app: Express) => {
   app.use(express.static(path.resolve(__dirname + `../../../views`)));
   app.get("/files", (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname+ `../../../uploads/${req.query.file}`));
+    res.sendFile(
+      path.resolve(__dirname + `../../../uploads/${req.query.file}`)
+    );
   });
   app.use(
     cors({
       origin: "*",
     })
   );
-  // compression data of request
+  /**
+   * Compression data of request
+   */
   app.use(
     compression({
       filter: configs.shouldCompress,

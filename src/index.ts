@@ -1,3 +1,8 @@
 require('dotenv').config({ path: `${__dirname}/../.env` });
 import App from "./app/index";
-new App().start(); // start server
+const appInstance: App = new App();
+
+/**
+ * Start Service
+ */
+appInstance.start(); 
