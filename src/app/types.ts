@@ -1,6 +1,8 @@
-// set new properties in the interface of global NodeJs
+/**
+ * Set new properties in the interface of global NodeJs
+ */
 declare namespace NodeJS {
-    interface Global {
-      globalSocket: any;
-    }
+  interface Global {
+    globalSocket: any;
+  }
 }

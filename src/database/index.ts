@@ -1,23 +1,22 @@
-require('dotenv').config({ path: `${__dirname}/../../.env` });
+require("dotenv").config({ path: `${__dirname}/../../.env` });
 import mongoose from "mongoose";
+import DatabaseSettings from "./DatabaseSettings";
 
 class SocialOneDataBase {
-    private connectionStringAtlas: string = `${process.env.DB_ATLAS}`;
-    private connectionStringLocal: string = `${process.env.DB_LOCAL}`;
-    
-    public start = async (): Promise<void> => {
-        try {
-            await mongoose.connect(process.env.NODE_ENV === "dev" ? this.connectionStringLocal : this.connectionStringAtlas, {
-                useNewUrlParser: true,
-                useFindAndModify: false,
-                useUnifiedTopology: true,
-                useCreateIndex: true
-            });
-            console.log("Database connected...")
-        } catch (error) {
-            console.log("Error to connect database!!!", error);
-        }
-    };
+  private urlDatabase: string = DatabaseSettings.getUrlByEnviroment();
+  public start = async (): Promise<void> => {
+    try {
+      await mongoose.connect(this.urlDatabase, {
+        useNewUrlParser: true,
+        useFindAndModify: false,
+        useUnifiedTopology: true,
+        useCreateIndex: true,
+      });
+      console.log("Database connected...");
+    } catch (error) {
+      console.log("Error to connect database!!!", error);
+    }
+  };
 }
 
 export default SocialOneDataBase;

@@ -94,10 +94,10 @@ class CodeController {
       if (getCode.code !== code)
         return res.status(400).json({ message: "Error at validate code. [3]" });
 
-      let codeIsBiggerThen24Hours: boolean =
+      let codeTimeIsGreatThan24Hours: boolean =
         moment().diff(getCode.updatedAt, "hours") >= this.codeHoursValidate;
 
-      if (codeIsBiggerThen24Hours)
+      if (codeTimeIsGreatThan24Hours)
         return res
           .status(400)
           .json({ message: "Error at validate code expires one day. [4]" });
@@ -151,9 +151,9 @@ class CodeController {
       if (!getCode) {
         codeResult = await this.newCode(userId, typeCode);
       } else {
-        let codeIsBiggerThen24Hours: boolean =
+        let codeTimeIsGreatThan24Hours: boolean =
           moment().diff(getCode.updatedAt, "hours") >= this.codeHoursValidate;
-        if (codeIsBiggerThen24Hours) {
+        if (codeTimeIsGreatThan24Hours) {
           codeResult = await this.newCode(userId, typeCode);
         } else {
           codeResult = `${getCode.code}`;
@@ -188,11 +188,9 @@ class CodeController {
             `,
         error
       );
-      return res
-        .status(400)
-        .json({
-          message: "Error at resend code! Network SocialOne. Try Again!",
-        });
+      return res.status(400).json({
+        message: "Error at resend code! Network SocialOne. Try Again!",
+      });
     }
   };
 
@@ -221,21 +219,19 @@ class CodeController {
       if (getCode.code !== code)
         return res.status(400).json({ message: "Error at validate code. [3]" });
 
-      let codeIsBiggerThen24Hours: boolean =
+      let codeTimeIsGreatThan24Hours: boolean =
         moment().diff(getCode.updatedAt, "hours") >= this.codeHoursValidate;
 
-      if (codeIsBiggerThen24Hours)
+      if (codeTimeIsGreatThan24Hours)
         return res
           .status(400)
           .json({ message: "Error at validate code expires one day. [4]" });
 
       // if user is not active set user with active
       if (!user?.emailChange?.trim()) {
-        return res
-          .status(400)
-          .json({
-            message: "Error at validate code email to change don't exists. [6]",
-          });
+        return res.status(400).json({
+          message: "Error at validate code email to change don't exists. [6]",
+        });
       }
 
       await User.updateOne(
