@@ -20,7 +20,7 @@ class Token {
 
       if (!(parts.length === 2)) return null;
 
-      const [scheme, token] = parts;
+      const [scheme, token]: string[] = parts;
 
       if (!/^Bearer$/i.test(scheme)) return null;
 

@@ -13,11 +13,17 @@ const bcrypt = require("bcrypt");
 class UserController {
   private saltRounds: number = 10;
 
+  /**
+   *
+   * @param req
+   * @param res
+   * @returns
+   */
   public getUsers = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { searchValue, skip, limit } = req.body;
 
-      const searchValueRegex: any = new RegExp(searchValue, "ig");
+      const searchValueRegex: RegExp | any = new RegExp(searchValue, "ig");
 
       const users: IUserSchema[] = await User.find(
         {
@@ -153,7 +159,7 @@ class UserController {
     } catch (error) {
       console.log(
         `
-        Error to create user: 
+        Error to create user:
         [user email: ${req.body.email}]
         [user phone: ${req.body.phone}]`,
         error
@@ -238,13 +244,13 @@ class UserController {
       );
 
       console.log(
-        `Connect socket: User update your property online and socketId 
-        [userId: ${userId}] 
+        `Connect socket: User update your property online and socketId
+        [userId: ${userId}]
         [socketId: ${socketId}]`
       );
     } catch (error) {
       console.log(
-        `Connect socket: Erro for try update online and socketId 
+        `Connect socket: Erro for try update online and socketId
         [userId: ${userId}]
         [socketId: ${socketId}]`,
         error
@@ -294,7 +300,7 @@ class UserController {
 
       console.log(
         `Disconnect socket: User update your property online and socketId
-        [userId: ${userUpdated._id}] 
+        [userId: ${userUpdated._id}]
         [socketId: ${socketId}]`
       );
 
@@ -354,7 +360,6 @@ class UserController {
       });
 
       if (userUpdated?.socketId?.length === 0) {
-        // inform that user is offline
         GlobalSocket.informUserOffLine(userId);
       }
 
@@ -365,7 +370,7 @@ class UserController {
       return;
     } catch (error) {
       console.log(
-        `Error logout 
+        `Error logout
         [userId: ${req.body.userId}]
         [socketId: ${req.body.socketId}]
       `,
@@ -404,7 +409,7 @@ class UserController {
       );
 
       if (!updateUserAvatar)
-        return res.status(409).json({ message: "Error user is don´t exists!" });
+        return res.status(409).json({ message: "Error user isn't exists!" });
 
       // socket to inform user alter avatar
       GlobalSocket.userUpdateProfileInfo({
@@ -416,7 +421,7 @@ class UserController {
       console.log(`Success to alter avatar: ${updateUserAvatar.fullName}`);
 
       return res.status(200).json({
-        message: "avatar user alter with success",
+        message: "avatar user changed with success",
         avatar: updateUserAvatar?.avatar,
       });
     } catch (error) {

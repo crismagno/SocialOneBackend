@@ -24,7 +24,11 @@ export class ServerCluster {
       // Workers can share any TCP connection
       // In this case it is an HTTP server
       this.server.listen(process.env.PORT, () =>
-        process.env.NODE_ENV === "dev" ? console.log(`Server running on -> http://localhost:${process.env.PORT}`) : "Running prod..."
+        process.env.NODE_ENV === "dev"
+          ? console.log(
+              `Server running on -> http://localhost:${process.env.PORT}`
+            )
+          : "Running prod..."
       );
 
       console.log(`Worker ${process.pid} started`);
