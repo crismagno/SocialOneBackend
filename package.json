@@ -5,7 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "nodemon src/index.ts",
-    "start": "pm2 start ts-node -- -P tsconfig.json src/index.ts"
+    "start:pm2": "pm2 start ts-node -- -P tsconfig.json src/index.ts",
+    "start": "ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
