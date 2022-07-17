@@ -3,6 +3,6 @@ import App from "./app/index";
 const appInstance: App = new App();
 
 /**
- * Start Application...
+ * Start Application
  */
 appInstance.start();
