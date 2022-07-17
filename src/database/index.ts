@@ -1,4 +1,3 @@
-require("dotenv").config({ path: `${__dirname}/../../.env` });
 import mongoose from "mongoose";
 import DatabaseSettings from "./DatabaseSettings";
 
@@ -13,8 +12,9 @@ class SocialOneDataBase {
         useCreateIndex: true,
       });
       console.log("Database connected...");
-    } catch (error) {
+    } catch (error: any) {
       console.log("Error to connect database!!!", error);
+      throw new Error(error);
     }
   };
 }
