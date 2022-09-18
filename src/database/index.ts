@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Log from "../infra/Log";
 import DatabaseSettings from "./DatabaseSettings";
 
 class SocialOneDataBase {
@@ -11,9 +12,9 @@ class SocialOneDataBase {
         useUnifiedTopology: true,
         useCreateIndex: true,
       });
-      console.log("Database connected...");
+      Log.success({ message: "Database connected..." });
     } catch (error: any) {
-      console.log("Error to connect database!!!", error);
+      Log.error({ message: `Error to connect database: ${error.message}` });
       throw new Error(error);
     }
   };

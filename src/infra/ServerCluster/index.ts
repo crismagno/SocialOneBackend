@@ -3,6 +3,7 @@ import http from "http";
 import { cpus } from "os";
 import process from "process";
 import EnviromentEnum from "../../settings/enviroment/enviroment.enum";
+import Log from "../Log";
 
 export class ServerCluster {
   constructor(private server: http.Server) {}
@@ -25,7 +26,7 @@ export class ServerCluster {
     // Workers can share any TCP connection
     // In this case it is an HTTP server
     this.server.listen(process.env.PORT, () =>
-      console.log(`Server running on ${process.env.APP_URL}`)
+      Log.success({ message: `Server running on ${process.env.APP_URL}` })
     );
 
     //   console.log(`Worker ${process.pid} started`);
