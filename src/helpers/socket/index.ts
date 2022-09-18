@@ -39,7 +39,7 @@ class GlobalSocket {
           GlobalSocket.io
             .compress(true)
             .emit(`inform-user-is-online`, data.userId);
-        }); 
+        });
 
         // inform that user is typing
         socket.on(
@@ -50,12 +50,9 @@ class GlobalSocket {
         );
 
         // atualizar o seen da mensagem setando o usuario
-        socket.on(
-          "set-seen-on-message-chat",
-          (data: ISetSeenOnMessageChat) => {
-            ChatController.setIdUserOnSeenMessageSingle(data);
-          }
-        );
+        socket.on("set-seen-on-message-chat", (data: ISetSeenOnMessageChat) => {
+          ChatController.setIdUserOnSeenMessageSingle(data);
+        });
 
         // when sockets disconnect
         socket.on("disconnect", async () => {
@@ -173,7 +170,6 @@ class GlobalSocket {
    * @param data
    */
   public static setIdUserOnSeenMessages = (data: ISetIdUserOnSeenMessages) => {
-
     // dados que serap passados para o emit do socket
     const dataSendSocket = { ...data };
     delete dataSendSocket?.usersChat;
@@ -187,7 +183,7 @@ class GlobalSocket {
         .compress(true)
         .emit(`set-seen-messages-by-home-${userId}`, dataSendSocket);
     }
-  }
+  };
 }
 
 export default GlobalSocket;

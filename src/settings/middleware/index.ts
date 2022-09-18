@@ -1,6 +1,14 @@
 require("dotenv").config({ path: `${__dirname}/../.env` });
 import cors from "cors";
-import express, { json, urlencoded, Request, Response, Express } from "express";
+import express, {
+  json,
+  urlencoded,
+  Request,
+  Response,
+  Express,
+  NextFunction,
+} from "express";
+import Log from "../../infra/Log";
 import configs from "./configs";
 const logger = require("morgan");
 const compression = require("compression");
@@ -9,16 +17,19 @@ const path = require("path");
 
 module.exports = (app: Express) => {
   app.use(express.static(path.resolve(__dirname + `../../../views`)));
+
   app.get("/files", (req: Request, res: Response): void => {
     res.sendFile(
       path.resolve(__dirname + `../../../uploads/${req.query.file}`)
     );
   });
+
   app.use(
     cors({
       origin: "*",
     })
   );
+
   /**
    * Compression data of request
    */
@@ -28,8 +39,11 @@ module.exports = (app: Express) => {
       threshold: 512, // tamanho em bytes a ser considerado para a compressão
     })
   );
+
   app.use(json({ limit: "25mb" }));
+
   app.use(logger("dev"));
+
   app.use(
     urlencoded({
       limit: "25mb",
@@ -37,10 +51,16 @@ module.exports = (app: Express) => {
       parameterLimit: 10000000,
     })
   );
+
   app.use(
     expressJWT({
       secret: process.env.JWT_SECRET_KEY,
       algorithms: ["HS256"],
     }).unless(configs.publicRoutes)
   );
+
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    Log.error({ message: err.message });
+    next(err);
+  });
 };
