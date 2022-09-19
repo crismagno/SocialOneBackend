@@ -6,7 +6,7 @@ import Email from "./../../services/email";
 import User from "../../models/User";
 import { ICodeSchema, TCode } from "../../models/Code/types";
 import { IUserSchema } from "../../models/User/types";
-import GlobalSocket from "../../helpers/socket";
+import GlobalSocket from "../../infra/GlobalSocket";
 
 class CodeController {
   private lengthCode: number = 4;
@@ -44,7 +44,7 @@ class CodeController {
 
       return codeGenerate;
     } catch (error) {
-      console.log(`Error to create newCode: 
+      console.log(`Error to create newCode:
                 [userId: ${userId}]
                 [typeCode: ${typeCode}]
             `);
@@ -183,7 +183,7 @@ class CodeController {
         .json({ message: "Code send success to E-mail or SMS" });
     } catch (error) {
       console.log(
-        `Error at resend code! Network SocialOne. Try Again! 
+        `Error at resend code! Network SocialOne. Try Again!
                 [userId${req.body.userId}]
             `,
         error

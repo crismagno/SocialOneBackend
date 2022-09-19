@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 import Log from "../infra/Log";
-import DatabaseSettings from "./DatabaseSettings";
+import EnviromentEnum from "../settings/enviroment/enviroment.enum";
 
-class SocialOneDataBase {
-  private urlDatabase: string = DatabaseSettings.getUrlByEnviroment();
+export default class SocialOneDataBase {
+  private urlDatabase: string = SocialOneDataBase.getUrlByEnviroment();
   public start = async (): Promise<void> => {
     try {
       await mongoose.connect(this.urlDatabase, {
@@ -18,6 +18,16 @@ class SocialOneDataBase {
       throw new Error(error);
     }
   };
-}
 
-export default SocialOneDataBase;
+  private static getUrlByEnviroment = (): string => {
+    const enviroment = process.env.NODE_ENV as EnviromentEnum.enviroment;
+    switch (enviroment) {
+      case EnviromentEnum.enviroment.PRODUCTION:
+        return String(process.env.DB_ATLAS);
+      case EnviromentEnum.enviroment.DEVELOPMENT:
+        return String(process.env.DB_DEVELOPMENT);
+      default:
+        throw new Error("Error enviroment dtabase: without env selected");
+    }
+  };
+}

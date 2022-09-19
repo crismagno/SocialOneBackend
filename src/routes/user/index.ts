@@ -1,6 +1,6 @@
 import UserController from "../../controllers/User/index";
 import { Application } from "express";
-import { upload } from "../../helpers/upload";
+import { upload } from "../../settings/upload";
 
 module.exports = (app: Application): void => {
   app.route("/user").post(UserController.getUsers);
