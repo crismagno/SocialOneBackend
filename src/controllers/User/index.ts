@@ -385,7 +385,7 @@ class UserController {
   /**
    * Alter avatar user
    */
-  public alterAvatar = async (
+  public updateAvatar = async (
     req: Request,
     res: Response
   ): Promise<void | Response> => {
@@ -568,11 +568,11 @@ class UserController {
   };
 
   /**
-   * solicit change email user and generate code to emial
+   * solicit update email user and generate code to emial
    * @param req
    * @param res
    */
-  public changeEmail = async (
+  public updateEmail = async (
     req: Request,
     res: Response
   ): Promise<void | Response> => {
