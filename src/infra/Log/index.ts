@@ -11,7 +11,7 @@ export default class Log {
    * @param module - What module system
    * @param logColor - type color to log show
    */
-  static show({
+  public static show = ({
     message,
     module = "",
     logColor = LogColorsStatus.NONE,
@@ -19,7 +19,7 @@ export default class Log {
     message: string;
     module?: EModules | string;
     logColor?: LogColorsStatus;
-  }): void {
+  }): void => {
     if (process.env.NODE_ENV === EnviromentEnum.enviroment.DEVELOPMENT) {
       const finalMessage = `
         -------------------------------------------------------
@@ -29,45 +29,45 @@ export default class Log {
         `.trim();
       console.log(colors[ELogColors[logColor]](finalMessage));
     }
-  }
+  };
 
-  static error({
+  public static error = ({
     message,
     module = "",
   }: {
     message: string;
     module?: EModules | string;
-  }): void {
+  }): void => {
     Log.show({ message, module, logColor: LogColorsStatus.ERROR });
-  }
+  };
 
-  static success({
+  public static success = ({
     message,
     module = "",
   }: {
     message: string;
     module?: EModules | string;
-  }): void {
+  }): void => {
     Log.show({ message, module, logColor: LogColorsStatus.SUCCESS });
-  }
+  };
 
-  static info({
+  public static info = ({
     message,
     module = "",
   }: {
     message: string;
     module?: EModules | string;
-  }): void {
+  }): void => {
     Log.show({ message, module, logColor: LogColorsStatus.INFO });
-  }
+  };
 
-  static warn({
+  public static warn = ({
     message,
     module = "",
   }: {
     message: string;
     module?: EModules | string;
-  }): void {
+  }): void => {
     Log.show({ message, module, logColor: LogColorsStatus.WARN });
-  }
+  };
 }

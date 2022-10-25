@@ -3,11 +3,11 @@ import { Request, Response } from "express";
 import { IUserSchema } from "../../models/User/types";
 import { IUserWithToken, TUpdateProfileInfo } from "./types";
 import { IUserPayloadToken } from "../../settings/token/types";
-import { validateEmail } from "./../../helpers/global";
+import { isValidEmail } from "./../../helpers/global";
 import Email from "../../services/email";
 import Token from "../../settings/token";
 import { scheduleValidateUserActive } from "./../../services/schedule";
-import GlobalSocket from "../../helpers/socket";
+import GlobalSocket from "../../infra/GlobalSocket";
 const bcrypt = require("bcrypt");
 
 class UserController {
@@ -60,7 +60,7 @@ class UserController {
       if (!email || !password)
         return res.status(400).json({ message: "Data informed is invalid" });
 
-      if (!validateEmail(email))
+      if (!isValidEmail(email))
         return res.status(400).json({ message: "Format email invalid" });
 
       const userDB: IUserSchema | null = await User.findOne({ email });
@@ -109,7 +109,7 @@ class UserController {
       if (!fullName || !email || !phone || !password)
         return res.status(409).json({ message: "Data informed is invalid" });
 
-      if (!validateEmail(email))
+      if (!isValidEmail(email))
         return res.status(409).json({ message: "Format email invalid" });
 
       const userDB: IUserSchema | null = await User.findOne(
@@ -385,7 +385,7 @@ class UserController {
   /**
    * Alter avatar user
    */
-  public alterAvatar = async (
+  public updateAvatar = async (
     req: Request,
     res: Response
   ): Promise<void | Response> => {
@@ -480,7 +480,7 @@ class UserController {
         });
 
       // valid property if equal -> email and if email is valid
-      if (property === "email" && !validateEmail(newValue))
+      if (property === "email" && !isValidEmail(newValue))
         return res.status(409).json({
           message: "Format email invalid",
         });
@@ -568,11 +568,11 @@ class UserController {
   };
 
   /**
-   * solicit change email user and generate code to emial
+   * solicit update email user and generate code to emial
    * @param req
    * @param res
    */
-  public changeEmail = async (
+  public updateEmail = async (
     req: Request,
     res: Response
   ): Promise<void | Response> => {
@@ -583,7 +583,7 @@ class UserController {
         return res.status(400).json({ message: "Body bad format" });
 
       // valid property if equal -> email and if email is valid
-      if (!validateEmail(newEmail))
+      if (!isValidEmail(newEmail))
         return res.status(409).json({
           message: "Format email invalid",
         });

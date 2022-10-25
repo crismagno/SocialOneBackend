@@ -2,7 +2,7 @@ import { Application } from "express";
 
 const consign = require("consign");
 
-export class SOConsign {
+export default class SocialOneConsign {
   constructor(private app: Application) {}
 
   public start = (): void => {
@@ -20,5 +20,3 @@ export class SOConsign {
       .into(this.app);
   };
 }
-
-export default SOConsign;

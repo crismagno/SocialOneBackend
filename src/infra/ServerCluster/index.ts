@@ -5,7 +5,7 @@ import process from "process";
 import EnviromentEnum from "../../settings/enviroment/enviroment.enum";
 import Log from "../Log";
 
-export class ServerCluster {
+export default class ServerCluster {
   constructor(private server: http.Server) {}
 
   public start = (): void => {
@@ -33,5 +33,3 @@ export class ServerCluster {
     // }
   };
 }
-
-export default ServerCluster;

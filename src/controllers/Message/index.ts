@@ -3,7 +3,7 @@ import Message from "../../models/Message/index";
 import { Request, Response } from "express";
 import { IMessageSchema } from "../../models/Message/types";
 import { Types } from "mongoose";
-import GlobalSocket from "../../helpers/socket";
+import GlobalSocket from "../../infra/GlobalSocket";
 import { IMessageCreateSchema } from "./types";
 
 class MessageController {
@@ -86,7 +86,7 @@ class MessageController {
       return;
     } catch (error) {
       console.log(
-        `Error to create message: 
+        `Error to create message:
             [userId: ${req.body.userId}]
             [chatId: ${req.body.chatId}]`,
         error
@@ -127,7 +127,7 @@ class MessageController {
 
       const messages: IMessageSchema[] | null = await Message.find({
         chat: chatId,
-        removeToUsers: { $ne: userId }
+        removeToUsers: { $ne: userId },
       })
         .skip(parseInt(skip))
         .limit(parseInt(limit))
@@ -154,7 +154,7 @@ class MessageController {
         .json({ message: "Messages find with success!", messages });
     } catch (error) {
       console.log(
-        `Error to getMessagesByChatId: 
+        `Error to getMessagesByChatId:
         [userId: ${req.body.userId}]
         [chatId: ${req.body.chatId}]`,
         error
@@ -216,7 +216,7 @@ class MessageController {
         .json({ message: "Messages find with success!", messages });
     } catch (error) {
       console.log(
-        `Error to getMessagesByChatIdAndDate: 
+        `Error to getMessagesByChatIdAndDate:
         [userId: ${req.body.userId}]
         [chatId: ${req.body.chatId}]`,
         error
@@ -303,13 +303,13 @@ class MessageController {
       GlobalSocket.messagesUpdatedBychatId({
         userId,
         chatId,
-        messages
+        messages,
       });
 
       return;
     } catch (error) {
       console.log(
-        `Error to removeMessages: 
+        `Error to removeMessages:
         [userId: ${req.body.userId}]
         [chatId: ${req.body.chatId}]`,
         error

@@ -7,11 +7,12 @@ import {
   ISetSeenOnMessageChat,
   IUserMakingActionOnChat,
 } from "./types";
-import UserController from "./../../controllers/User";
+import UserController from "../../controllers/User";
 import { IUserSchema } from "../../models/User/types";
 import ChatController from "../../controllers/Chat/index";
 import { IMessageSchema } from "../../models/Message/types";
-class GlobalSocket {
+
+export default class GlobalSocket {
   public static io: Socket;
   /**
    * Method that start the socket of app
@@ -185,5 +186,3 @@ class GlobalSocket {
     }
   };
 }
-
-export default GlobalSocket;
