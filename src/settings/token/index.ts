@@ -1,4 +1,4 @@
-import Log from "@src/infra/Log";
+import Log from "./../../infra/Log";
 import { Request } from "express";
 import { IUserPayloadToken } from "./types";
 // const jwt = require('jwt-simple')
