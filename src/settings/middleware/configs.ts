@@ -1,9 +1,8 @@
-require("dotenv").config({ path: `${__dirname}/../.env` });
 import { Request, Response } from "express";
 const compression = require("compression");
 
 // Method that valid if request has compress
-const shouldCompress = (req: Request, res: Response) => {
+export const shouldCompress = (req: Request, res: Response) => {
   if (req.headers["x-no-compression"]) {
     // don't compress responses with this request header
     return false;
@@ -12,7 +11,7 @@ const shouldCompress = (req: Request, res: Response) => {
   return compression.filter(req, res);
 };
 
-const publicRoutes = {
+export const publicRoutes = {
   path: [
     "/",
     "/user/signin",
@@ -25,9 +24,4 @@ const publicRoutes = {
     // "/message/by_chat_id",
     // "/message/create",
   ],
-};
-
-export default {
-  shouldCompress,
-  publicRoutes,
 };

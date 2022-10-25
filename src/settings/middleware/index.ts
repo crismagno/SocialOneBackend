@@ -1,4 +1,3 @@
-require("dotenv").config({ path: `${__dirname}/../.env` });
 import cors from "cors";
 import express, {
   json,
@@ -9,7 +8,7 @@ import express, {
   NextFunction,
 } from "express";
 import Log from "../../infra/Log";
-import configs from "./configs";
+import { publicRoutes, shouldCompress } from "./configs";
 const logger = require("morgan");
 const compression = require("compression");
 const expressJWT = require("express-jwt");
@@ -35,7 +34,7 @@ module.exports = (app: Express) => {
    */
   app.use(
     compression({
-      filter: configs.shouldCompress,
+      filter: shouldCompress,
       threshold: 512, // tamanho em bytes a ser considerado para a compressão
     })
   );
@@ -56,7 +55,7 @@ module.exports = (app: Express) => {
     expressJWT({
       secret: process.env.JWT_SECRET_KEY,
       algorithms: ["HS256"],
-    }).unless(configs.publicRoutes)
+    }).unless(publicRoutes)
   );
 
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {

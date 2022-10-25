@@ -1,4 +1,3 @@
-require("dotenv").config({ path: `${__dirname}/../../../.env` });
 import Code from "../../controllers/Code";
 import { IUserSchema } from "../../models/User/types";
 import {
