@@ -27,7 +27,7 @@ export default class SocialOneDataBase {
       case EnviromentEnum.enviroment.DEVELOPMENT:
         return String(process.env.DB_DEVELOPMENT);
       default:
-        throw new Error("Error enviroment database: without env selected");
+        throw new Error("Error enviroment database: without env selected.");
     }
   };
 }
