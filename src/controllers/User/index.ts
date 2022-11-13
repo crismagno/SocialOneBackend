@@ -11,14 +11,8 @@ import GlobalSocket from "../../infra/GlobalSocket";
 const bcrypt = require("bcrypt");
 
 class UserController {
-  private saltRounds: number = 10;
+  private readonly saltRounds = process.env.SALT_ROUNDS as number | undefined;
 
-  /**
-   *
-   * @param req
-   * @param res
-   * @returns
-   */
   public getUsers = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { searchValue, skip, limit } = req.body;
@@ -54,46 +48,48 @@ class UserController {
     req: Request,
     res: Response
   ): Promise<void | Response> => {
+    const { email, password } = req.body;
+
     try {
-      const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ message: "Invalid data." });
+      }
 
-      if (!email || !password)
-        return res.status(400).json({ message: "Data informed is invalid" });
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ message: "Invalid Format email." });
+      }
 
-      if (!isValidEmail(email))
-        return res.status(400).json({ message: "Format email invalid" });
+      const user: IUserSchema | null = await User.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ message: "Invalid Email or Password." });
+      }
 
-      const userDB: IUserSchema | null = await User.findOne({ email });
-
-      if (!userDB)
-        return res.status(400).json({ message: "Email or Password invalid" });
-
-      const passwordCompare = await bcrypt.compare(password, userDB.password);
-      if (!passwordCompare)
-        return res.status(400).json({ message: "Email or Password invalid" });
+      const passwordCompare = await bcrypt.compare(password, user.password);
+      if (!passwordCompare) {
+        return res.status(400).json({ message: "Invalid Email or Password." });
+      }
 
       const payload: IUserPayloadToken = {
-        _id: userDB._id,
+        _id: user._id,
         expires: Date.now() + 1000 * 60 * 24,
       };
 
       const userWithToken: IUserWithToken = {
-        _id: `${userDB._id}`,
-        fullName: `${userDB.fullName}`,
-        email: `${userDB.email}`,
-        phone: `${userDB.phone}`,
-        avatar: `${userDB.avatar}`,
+        _id: `${user._id}`,
+        fullName: `${user.fullName}`,
+        email: `${user.email}`,
+        phone: `${user.phone}`,
+        avatar: `${user.avatar}`,
         token: Token.generate(payload),
       };
 
-      await Email.emailWelcome(userDB);
-
-      console.log(`Success to do signIn Email ${email}`);
+      await Email.emailWelcome(user);
 
       return res.status(201).json(userWithToken);
     } catch (error) {
-      console.log(`Error to do signIn Email ${req.body.email}`, error);
-      return res.status(400).json({ message: "Error Social network" });
+      return res
+        .status(400)
+        .json({ message: "Error when try to signIn. Please contact support." });
     }
   };
 
@@ -311,9 +307,6 @@ class UserController {
     }
   };
 
-  /**
-   * logout
-   */
   public logoutUser = async (
     req: Request,
     res: Response
@@ -380,9 +373,6 @@ class UserController {
     }
   };
 
-  /**
-   * Alter avatar user
-   */
   public updateAvatar = async (
     req: Request,
     res: Response
@@ -448,11 +438,6 @@ class UserController {
     }
   };
 
-  /**
-   * Alter info user, like fullName, email or phone
-   * @param req
-   * @param res
-   */
   public updateProfileInfo = async (
     req: Request,
     res: Response
@@ -506,20 +491,16 @@ class UserController {
           message: "Email is same!",
         });
 
-      // if phone is the same
       if (property === "phone" && userDB.phone === newValue)
         return res.status(409).json({
           message: "Phone is same!",
         });
 
-      // query of users that have newValue passed based on property
-      const query = {
-        _id: { $ne: userId },
-        [`${property}`]: newValue,
-      };
-
       const findUserHasTheSameNewValue: IUserSchema | null = await User.findOne(
-        query,
+        {
+          _id: { $ne: userId },
+          [property]: newValue,
+        },
         { _id: 1 }
       );
 
@@ -565,11 +546,6 @@ class UserController {
     }
   };
 
-  /**
-   * solicit update email user and generate code to emial
-   * @param req
-   * @param res
-   */
   public updateEmail = async (
     req: Request,
     res: Response
@@ -652,11 +628,6 @@ class UserController {
     }
   };
 
-  /**
-   * Verify if user has email pending for change
-   * @param req
-   * @param res
-   */
   public validateExistsEmailChange = async (
     req: Request,
     res: Response
@@ -690,11 +661,6 @@ class UserController {
     }
   };
 
-  /**
-   * cancel the email that is with pending change
-   * @param req
-   * @param res
-   */
   public cancelEmailPendingOfChange = async (
     req: Request,
     res: Response
@@ -767,11 +733,6 @@ class UserController {
     }
   };
 
-  /**
-   * solicit update password user
-   * @param req
-   * @param res
-   */
   public updatePassword = async (
     req: Request,
     res: Response

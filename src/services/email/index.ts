@@ -30,153 +30,131 @@ const templatesEmail: ITemplatesEmail = {
   },
 };
 
-class Email {
-  private host = process.env.HOST;
-  private port = process.env.PORT_EMAIL;
-  private user = process.env.USER;
-  private pass = process.env.PASS;
+export default class Email {
+  private static readonly host = process.env.HOST;
+  private static readonly port = process.env.PORT_EMAIL;
+  private static readonly user = process.env.USER;
+  private static readonly pass = process.env.PASS;
 
-  private sendEmail = async (bodyEmail: IBodySendEmail): Promise<any> => {
+  private static _send = async (bodyEmail: IBodySendEmail): Promise<any> => {
     return new Promise((resolve: any, reject: any) => {
-      if (!this.host || !this.port || !this.user || !this.pass) {
+      if (!Email.host || !Email.port || !Email.user || !Email.pass) {
         reject("Error when try to send email. Empty or invalid parameters!");
       }
 
       const settingsEmail = {
-        host: this.host,
-        port: this.port,
+        host: Email.host,
+        port: Email.port,
         secure: true, // true for 465, false for other ports
-        auth: { user: this.user, pass: this.pass },
+        auth: { user: Email.user, pass: Email.pass },
         tls: { rejectUnauthorized: true, ciphers: "SSLv3" },
       };
 
       const transporter = nodemailer.createTransport(settingsEmail);
 
       const mailOptions = {
-        from: this.user,
+        from: Email.user,
         ...bodyEmail,
       };
 
       transporter.sendMail(mailOptions, (error: any, info: any) => {
         if (error) {
-          console.log("error: ", error);
           reject(error);
         } else {
-          console.log("info: ", info);
           resolve(info);
         }
       });
     });
   };
 
-  public emailWelcome = async (user: IUserSchema): Promise<any> => {
-    return new Promise(async (resolve: any, reject: any) => {
-      try {
-        const code: string = await Code.newCode(
-          user?._id,
-          CodeEnum.Types.VERIFY_CODE
-        );
+  public static emailWelcome = async (user: IUserSchema): Promise<any> => {
+    const code: string = await Code.newCode(
+      user?._id,
+      CodeEnum.Types.VERIFY_CODE
+    );
 
-        if (!code.trim()) {
-          reject("Error when try generate code. Code Empty!");
-          return;
-        }
+    if (!code.trim()) {
+      throw new Error("Error when try generate code. Code Empty!");
+    }
 
-        const chooseTemplate: ITemplate = templatesEmail.welcome;
+    const chooseTemplate: ITemplate = templatesEmail.welcome;
 
-        const responseEmail = await this.sendEmail({
-          to: String(user?.email),
-          subject: chooseTemplate.subject,
-          html:
-            chooseTemplate.html &&
-            chooseTemplate.html(String(user?.fullName), code),
-        });
-
-        resolve(responseEmail);
-      } catch (error) {
-        reject(error);
-      }
+    const responseEmail = await Email._send({
+      to: String(user?.email),
+      subject: chooseTemplate.subject,
+      html:
+        chooseTemplate.html &&
+        chooseTemplate.html(String(user?.fullName), code),
     });
+
+    return responseEmail;
   };
 
-  public emailResendVerifyCode = async (
+  public static emailResendVerifyCode = async (
     bodyEmailResendVerifyCode: IBodyEmailResendVerifyCode
   ): Promise<any> => {
-    return new Promise(async (resolve: any, reject: any) => {
-      try {
-        const chooseTemplate: ITemplate = templatesEmail.resendVerifyCode;
+    const chooseTemplate: ITemplate = templatesEmail.resendVerifyCode;
 
-        const responseEmail = await this.sendEmail({
-          to: bodyEmailResendVerifyCode.to,
-          subject: chooseTemplate.subject,
-          html:
-            chooseTemplate.html &&
-            chooseTemplate.html(
-              bodyEmailResendVerifyCode.fullName,
-              bodyEmailResendVerifyCode.code
-            ),
-        });
-
-        resolve(responseEmail);
-      } catch (error) {
-        reject(error);
-      }
+    const responseEmail = await Email._send({
+      to: bodyEmailResendVerifyCode.to,
+      subject: chooseTemplate.subject,
+      html:
+        chooseTemplate.html &&
+        chooseTemplate.html(
+          bodyEmailResendVerifyCode.fullName,
+          bodyEmailResendVerifyCode.code
+        ),
     });
+
+    return responseEmail;
   };
 
-  public emailToRequestChangeEmailUser = async (
+  public static emailToRequestChangeEmailUser = async (
     user: IUserSchema
   ): Promise<any> => {
-    return new Promise(async (resolve: any, reject: any) => {
-      try {
-        const code = await Code.newCode(user._id, CodeEnum.Types.CHANGE_EMAIL);
+    const code: string = await Code.newCode(
+      user._id,
+      CodeEnum.Types.CHANGE_EMAIL
+    );
 
-        if (!code.trim() || !user) {
-          reject("Error when try generate code. Code Empty or Invalid User!");
-        }
+    if (!code.trim() || !user) {
+      throw new Error(
+        "Error when try generate code. Code Empty or Invalid User!"
+      );
+    }
 
-        const chooseTemplate: ITemplate = templatesEmail.changeEmail;
+    const chooseTemplate: ITemplate = templatesEmail.changeEmail;
 
-        const responseEmail = await this.sendEmail({
-          to: [String(user?.email), String(user?.emailChange)],
-          subject: chooseTemplate.subject,
-          html:
-            chooseTemplate.html &&
-            chooseTemplate.html(String(user?.fullName), code),
-        });
-
-        resolve(responseEmail);
-      } catch (error) {
-        reject(error);
-      }
+    const responseEmail = await Email._send({
+      to: [String(user?.email), String(user?.emailChange)],
+      subject: chooseTemplate.subject,
+      html:
+        chooseTemplate.html &&
+        chooseTemplate.html(String(user?.fullName), code),
     });
+
+    return responseEmail;
   };
 
-  public emailResendToRequestChangeEmailUser = async (
+  public static emailResendToRequestChangeEmailUser = async (
     user: IUserSchema,
     code: string
   ): Promise<any> => {
-    return new Promise(async (resolve: any, reject: any) => {
-      try {
-        if (!code.trim() || !user) {
-          reject("Error when try generate code. Code Empty or Invalid User!");
-        }
+    if (!code.trim() || !user) {
+      throw new Error(
+        "Error when try generate code. Code Empty or Invalid User!"
+      );
+    }
 
-        const chooseTemplate: ITemplate = templatesEmail.changeEmail;
-        const responseEmail = await this.sendEmail({
-          to: [String(user?.email), String(user?.emailChange)],
-          subject: chooseTemplate.subject,
-          html:
-            chooseTemplate.html &&
-            chooseTemplate.html(String(user?.fullName), code),
-        });
-
-        resolve(responseEmail);
-      } catch (error) {
-        reject(error);
-      }
+    const chooseTemplate: ITemplate = templatesEmail.changeEmail;
+    const responseEmail = await Email._send({
+      to: [String(user?.email), String(user?.emailChange)],
+      subject: chooseTemplate.subject,
+      html:
+        chooseTemplate.html &&
+        chooseTemplate.html(String(user?.fullName), code),
     });
+
+    return responseEmail;
   };
 }
-
-export default new Email();

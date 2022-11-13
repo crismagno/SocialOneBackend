@@ -1,16 +1,15 @@
 import Log from "./../../infra/Log";
 import { Request } from "express";
 import { IUserPayloadToken } from "./types";
-// const jwt = require('jwt-simple')
 const jwt = require("jsonwebtoken");
 
-class Token {
-  private readonly JWT_SECRET_KEY: string = `${process.env.JWT_SECRET_KEY}`;
+export default class Token {
+  private static readonly JWT_SECRET_KEY: string = `${process.env.JWT_SECRET_KEY}`;
 
-  public generate = (payload: IUserPayloadToken): string =>
-    jwt.sign(payload, this.JWT_SECRET_KEY);
+  public static generate = (payload: IUserPayloadToken): string =>
+    jwt.sign(payload, Token.JWT_SECRET_KEY);
 
-  public decode = (req: Request): IUserPayloadToken | null => {
+  public static decode = (req: Request): IUserPayloadToken | null => {
     try {
       const authorization: string | undefined = req.headers.authorization;
 
@@ -26,7 +25,10 @@ class Token {
 
       if (!token) return null;
 
-      const decoded: IUserPayloadToken = jwt.decode(token, this.JWT_SECRET_KEY);
+      const decoded: IUserPayloadToken = jwt.decode(
+        token,
+        Token.JWT_SECRET_KEY
+      );
 
       if (!decoded) return null;
 
@@ -37,5 +39,3 @@ class Token {
     }
   };
 }
-
-export default new Token();
