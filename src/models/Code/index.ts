@@ -1,21 +1,25 @@
 import { Schema, model } from "mongoose";
 import { ICodeSchema } from "./types";
+import CodeEnum from "./code.enum";
 
-const CodeSchema: Schema = new Schema({
+const CodeSchema: Schema = new Schema(
+  {
     user: {
-        type: Schema.Types.ObjectId,
-        ref: "User"
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
     code: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     type: {
-        type: String,
-        enum: ["VERIFY_CODE", "CHANGE_EMAIL"]
-    }
-}, {
+      type: String,
+      enum: Object.keys(CodeEnum.Types),
+    },
+  },
+  {
     timestamps: true,
-});
+  }
+);
 
 export default model<ICodeSchema>("Code", CodeSchema);

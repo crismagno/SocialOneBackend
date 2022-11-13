@@ -7,6 +7,7 @@ import User from "../../models/User";
 import { ICodeSchema, TCode } from "../../models/Code/types";
 import { IUserSchema } from "../../models/User/types";
 import GlobalSocket from "../../infra/GlobalSocket";
+import CodeEnum from "../../models/Code/code.enum";
 
 class CodeController {
   private lengthCode: number = 4;
@@ -161,7 +162,7 @@ class CodeController {
       }
 
       if (!!codeResult.trim()) {
-        if (typeCode === "VERIFY_CODE") {
+        if (typeCode === CodeEnum.Types.VERIFY_CODE) {
           await Email.emailResendVerifyCode({
             to: `${user.email}`,
             fullName: `${user.fullName}`,
@@ -169,7 +170,7 @@ class CodeController {
           });
         }
 
-        if (typeCode === "CHANGE_EMAIL") {
+        if (typeCode === CodeEnum.Types.CHANGE_EMAIL) {
           await Email.emailResendToRequestChangeEmailUser(user, codeResult);
         }
       } else {
