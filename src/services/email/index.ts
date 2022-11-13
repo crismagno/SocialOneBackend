@@ -79,6 +79,7 @@ class Email {
 
         if (!code.trim()) {
           reject("Error when try generate code. Code Empty!");
+          return;
         }
 
         const chooseTemplate: ITemplate = templatesEmail.welcome;

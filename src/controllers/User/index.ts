@@ -86,13 +86,11 @@ class UserController {
         token: Token.generate(payload),
       };
 
-      res.status(201).json(userWithToken);
-
       await Email.emailWelcome(userDB);
 
       console.log(`Success to do signIn Email ${email}`);
 
-      return;
+      return res.status(201).json(userWithToken);
     } catch (error) {
       console.log(`Error to do signIn Email ${req.body.email}`, error);
       return res.status(400).json({ message: "Error Social network" });
