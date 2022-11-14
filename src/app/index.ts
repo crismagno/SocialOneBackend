@@ -1,6 +1,6 @@
 import UserController from "./../controllers/User";
 import express, { Express } from "express";
-import SocialOneDataBase from "./../database";
+import DataBase from "./../database";
 import GlobalSocket from "../infra/GlobalSocket";
 import SocialOneConsign from "../infra/SocialOneConsign";
 import http from "http";
@@ -9,9 +9,10 @@ import ServerCluster from "../infra/ServerCluster";
 export default class App {
   private readonly app: Express = express();
   private readonly server: http.Server = http.createServer(this.app);
+  private readonly dataBaseInstance: DataBase = DataBase.getInstance();
 
   public start = async (): Promise<void> => {
-    new SocialOneDataBase().start();
+    await this.dataBaseInstance.start();
     /**
      * -> await UserController.updateSocketAllUsers()
      * Remove all sockets of users and set online to false
