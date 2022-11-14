@@ -1,10 +1,13 @@
-export interface IUserWithToken {
-    _id: string;
-    fullName: string;
-    email: string;
-    phone: string;
-    avatar?: string;
-    token: string;
-};
+import UserEnum from "../../shared/user/user.enum";
 
-export type TUpdateProfileInfo =  ["fullName", "email", "phone"]
+export interface IUserWithToken {
+  _id: string;
+  avatar?: string;
+  email: string;
+  fullName: string;
+  phone: string;
+  role: UserEnum.Roles;
+  token: string;
+}
+
+export type TUpdateProfileInfo = ["fullName", "email", "phone"];

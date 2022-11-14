@@ -5,7 +5,7 @@ import { IChatCreate, IChatMessageCreateStart } from "./types";
 import { IChatSchema } from "../../models/Chat/types";
 import { IMessageSchema } from "../../models/Message/types";
 import User from "../../models/User";
-import { IUserSchema } from "../../models/User/types";
+import { IUser } from "../../models/User/types";
 import { Mongoose, Schema, Types } from "mongoose";
 import GlobalSocket from "../../infra/GlobalSocket";
 import {
@@ -37,7 +37,7 @@ class ChatController {
   public setIdUserOnSeenMessages = async (
     userId: any,
     chatId: any,
-    usersChat: IUserSchema[] | any[]
+    usersChat: IUser[] | any[]
   ): Promise<boolean> => {
     try {
       // buscando ids das mensagens
@@ -58,9 +58,7 @@ class ChatController {
       if (messagesIds?.length <= 0) return true;
 
       // transformar os dados de usuario somente os ids
-      const onlyIdUsers: string[] = usersChat?.map(
-        (user: IUserSchema) => user?._id
-      );
+      const onlyIdUsers: string[] = usersChat?.map((user: IUser) => user?._id);
       const dataSocket: ISetIdUserOnSeenMessages = {
         userId,
         chatId,
@@ -263,7 +261,7 @@ class ChatController {
       userId = Types.ObjectId(userId);
 
       const searchValueRegex: any = new RegExp(searchValue, "ig");
-      let usersBySearchValue: IUserSchema[] | null = null;
+      let usersBySearchValue: IUser[] | null = null;
 
       // searvalue empty
       if (!searchValue?.trim()) {
@@ -285,7 +283,7 @@ class ChatController {
         }
 
         const idsUsersSearchValue = usersBySearchValue.map(
-          (user: IUserSchema): Types.ObjectId => Types.ObjectId(user._id)
+          (user: IUser): Types.ObjectId => Types.ObjectId(user._id)
         );
 
         if (idsUsersSearchValue.length > 0) {

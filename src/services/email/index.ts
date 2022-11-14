@@ -1,6 +1,6 @@
 import CodeEnum from "../../models/Code/code.enum";
 import Code from "../../controllers/Code";
-import { IUserSchema } from "../../models/User/types";
+import { IUser } from "../../models/User/types";
 import {
   ITemplatesEmail,
   IBodySendEmail,
@@ -67,7 +67,7 @@ export default class Email {
     });
   };
 
-  public static emailWelcome = async (user: IUserSchema): Promise<any> => {
+  public static emailWelcome = async (user: IUser): Promise<any> => {
     const code: string = await Code.newCode(
       user?._id,
       CodeEnum.Types.VERIFY_CODE
@@ -110,7 +110,7 @@ export default class Email {
   };
 
   public static emailToRequestChangeEmailUser = async (
-    user: IUserSchema
+    user: IUser
   ): Promise<any> => {
     const code: string = await Code.newCode(
       user._id,
@@ -137,7 +137,7 @@ export default class Email {
   };
 
   public static emailResendToRequestChangeEmailUser = async (
-    user: IUserSchema,
+    user: IUser,
     code: string
   ): Promise<any> => {
     if (!code.trim() || !user) {
