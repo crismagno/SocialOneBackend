@@ -13,6 +13,11 @@ namespace UserEnum {
     VALIDATE_PASSWORD = "/user/validate_password",
     UPDATE_PASSWORD = "/user/update_password",
   }
+
+  export enum Roles {
+    NORMAL = "NORMAL",
+    MASTER = "MASTER",
+  }
 }
 
 export default UserEnum;

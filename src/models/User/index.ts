@@ -1,7 +1,8 @@
 import { Schema, model } from "mongoose";
-import { IUserSchema } from "./types";
+import { IUser } from "./types";
+import UserEnum from "../../shared/user/user.enum";
 
-const UserSchema: Schema = new Schema(
+const User: Schema = new Schema(
   {
     fullName: {
       type: String,
@@ -41,10 +42,14 @@ const UserSchema: Schema = new Schema(
       type: String,
       default: null,
     },
+    role: {
+      type: String,
+      enum: Object.keys(UserEnum.Roles),
+    },
   },
   {
     timestamps: true,
   }
 );
 
-export default model<IUserSchema>("User", UserSchema);
+export default model<IUser>("User", User);

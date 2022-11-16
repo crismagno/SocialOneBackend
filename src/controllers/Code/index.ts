@@ -5,7 +5,7 @@ import moment from "moment";
 import Email from "./../../services/email";
 import User from "../../models/User";
 import { ICodeSchema, TCode } from "../../models/Code/types";
-import { IUserSchema } from "../../models/User/types";
+import { IUser } from "../../models/User/types";
 import GlobalSocket from "../../infra/GlobalSocket";
 import CodeEnum from "../../models/Code/code.enum";
 
@@ -80,7 +80,7 @@ class CodeController {
       if (!userId || !code || code.length !== 4 || !typeCode)
         return res.status(400).json({ message: "Error at validate code. [1]" });
 
-      const user: IUserSchema | null = await User.findOne({ _id: userId });
+      const user: IUser | null = await User.findOne({ _id: userId });
 
       if (!user) return res.status(400).json({ message: "Error user invalid" });
 
@@ -140,7 +140,7 @@ class CodeController {
 
       let codeResult: string = "";
 
-      const user: IUserSchema | null = await User.findOne({ _id: userId });
+      const user: IUser | null = await User.findOne({ _id: userId });
 
       if (!user) return res.status(400).json({ message: "Error user invalid" });
 
@@ -205,7 +205,7 @@ class CodeController {
       if (!userId || !code || code.length !== 4 || !typeCode)
         return res.status(400).json({ message: "Error at validate code. [1]" });
 
-      const user: IUserSchema | null = await User.findById({ _id: userId });
+      const user: IUser | null = await User.findById({ _id: userId });
 
       if (!user) return res.status(400).json({ message: "Error user invalid" });
 

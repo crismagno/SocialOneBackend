@@ -1,6 +1,6 @@
 import User from "./../../models/User/index";
 import { Request, Response } from "express";
-import { IUserSchema } from "../../models/User/types";
+import { IUser } from "../../models/User/types";
 import { IUserWithToken, TUpdateProfileInfo } from "./types";
 import { IUserPayloadToken } from "../../settings/token/types";
 import { isValidEmail } from "./../../helpers/global";
@@ -8,18 +8,20 @@ import Email from "../../services/email";
 import Token from "../../settings/token";
 import { scheduleValidateUserActive } from "./../../services/schedule";
 import GlobalSocket from "../../infra/GlobalSocket";
+import UserEnum from "../../shared/user/user.enum";
+
 const bcrypt = require("bcrypt");
 
 class UserController {
-  private readonly saltRounds = process.env.SALT_ROUNDS as number | undefined;
+  private readonly saltRounds: number = 10;
 
   public getUsers = async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const { searchValue, skip, limit } = req.body;
+    const { searchValue, skip, limit } = req.body;
 
+    try {
       const searchValueRegex: RegExp | any = new RegExp(searchValue, "ig");
 
-      const users: IUserSchema[] = await User.find(
+      const users: IUser[] = await User.find(
         {
           $or: [{ fullName: searchValueRegex }, { email: searchValueRegex }],
           active: true,
@@ -31,6 +33,7 @@ class UserController {
           avatar: 1,
           online: 1,
           active: 1,
+          role: 1,
         }
       )
         .skip(parseInt(skip))
@@ -39,8 +42,9 @@ class UserController {
 
       return res.status(200).json(users);
     } catch (error) {
-      console.log(`Error to get users`, error);
-      return res.status(400).json({ messasge: `Error to get users` });
+      return res.status(400).json({
+        messasge: `Error when try to get users. Please contact support.`,
+      });
     }
   };
 
@@ -59,7 +63,7 @@ class UserController {
         return res.status(400).json({ message: "Invalid Format email." });
       }
 
-      const user: IUserSchema | null = await User.findOne({ email });
+      const user: IUser | null = await User.findOne({ email });
       if (!user) {
         return res.status(400).json({ message: "Invalid Email or Password." });
       }
@@ -81,6 +85,7 @@ class UserController {
         phone: `${user.phone}`,
         avatar: `${user.avatar}`,
         token: Token.generate(payload),
+        role: user.role as UserEnum.Roles,
       };
 
       await Email.emailWelcome(user);
@@ -106,7 +111,7 @@ class UserController {
       if (!isValidEmail(email))
         return res.status(409).json({ message: "Format email invalid" });
 
-      const userDB: IUserSchema | null = await User.findOne(
+      const userDB: IUser | null = await User.findOne(
         {
           $or: [{ email }, { phone }],
         },
@@ -121,11 +126,12 @@ class UserController {
 
       const passwordWithBcrypt = bcrypt.hashSync(password, this.saltRounds);
 
-      const user: IUserSchema = await User.create({
+      const user: IUser = await User.create({
         fullName,
         email,
         phone,
         password: passwordWithBcrypt,
+        role: UserEnum.Roles.NORMAL,
       });
 
       const payload: IUserPayloadToken = {
@@ -140,22 +146,18 @@ class UserController {
         phone: `${user.phone}`,
         avatar: `${user.avatar}`,
         token: Token.generate(payload),
+        role: user.role as UserEnum.Roles,
       };
-
-      res.status(201).json(userWithToken);
 
       // validate if user active account or delete user
       scheduleValidateUserActive(user._id);
 
       await Email.emailWelcome(user);
 
-      return;
+      return res.status(201).json(userWithToken);
     } catch (error) {
       console.log(
-        `
-        Error to create user:
-        [user email: ${req.body.email}]
-        [user phone: ${req.body.phone}]`,
+        `Error to create user: [user email: ${req.body.email}] [user phone: ${req.body.phone}]`,
         error
       );
       return res.status(409).json({
@@ -168,46 +170,42 @@ class UserController {
     req: Request,
     res: Response
   ): Promise<void | Response> => {
-    try {
-      const { userId } = req.body;
+    const { userId } = req.body;
 
+    try {
       if (!userId)
         return res.status(400).json({
           message: "Data informed is invalid",
         });
 
-      const userDB: IUserSchema | null = await User.findById({
+      const user: IUser | null = await User.findById({
         _id: userId,
       });
 
-      if (!userDB)
+      if (!user)
         return res.status(400).json({
           message: "User not exists",
         });
 
       const payload: IUserPayloadToken = {
-        _id: userDB._id,
+        _id: user._id,
         expires: Date.now() + 1000 * 60 * 24,
       };
 
       const userWithToken: IUserWithToken = {
-        _id: `${userDB._id}`,
-        fullName: `${userDB.fullName}`,
-        email: `${userDB.email}`,
-        phone: `${userDB.phone}`,
-        avatar: `${userDB.avatar}`,
+        _id: `${user._id}`,
+        fullName: `${user.fullName}`,
+        email: `${user.email}`,
+        phone: `${user.phone}`,
+        avatar: `${user.avatar}`,
         token: Token.generate(payload),
+        role: user.role as UserEnum.Roles,
       };
 
       return res.status(201).json(userWithToken);
     } catch (error) {
-      console.log(
-        `
-        Error to get user by id: [userId: ${req.body.userId}]`,
-        error
-      );
       return res.status(400).json({
-        message: "Error get user by id",
+        message: "Error get user. Please contact support",
       });
     }
   };
@@ -257,7 +255,7 @@ class UserController {
    */
   public disconnectUserUpdateBySocketId = async (
     socketId: string
-  ): Promise<IUserSchema | void | null> => {
+  ): Promise<IUser | void | null> => {
     try {
       if (!socketId) {
         console.log("Disconnect socket: socketId empty...");
@@ -271,7 +269,7 @@ class UserController {
         }
       );
 
-      const userUpdated: IUserSchema | null = await User.findOneAndUpdate(
+      const userUpdated: IUser | null = await User.findOneAndUpdate(
         { socketId: { $in: [socketId] } },
         {
           $set: {
@@ -318,7 +316,7 @@ class UserController {
           message: "Data informed is invalid",
         });
 
-      const userDB: IUserSchema | null = await User.findById(
+      const userDB: IUser | null = await User.findById(
         {
           _id: userId,
         },
@@ -327,7 +325,7 @@ class UserController {
         }
       );
 
-      const userUpdated: IUserSchema | null = await User.findByIdAndUpdate(
+      const userUpdated: IUser | null = await User.findByIdAndUpdate(
         {
           _id: userId,
         },
@@ -384,7 +382,7 @@ class UserController {
       if (!userId)
         return res.status(409).json({ message: "Data body malformated" });
 
-      const updateUserAvatar: IUserSchema | null = await User.findByIdAndUpdate(
+      const updateUserAvatar: IUser | null = await User.findByIdAndUpdate(
         {
           _id: userId,
         },
@@ -468,7 +466,7 @@ class UserController {
           message: "Format email invalid",
         });
 
-      const userDB: IUserSchema | null = await User.findById(
+      const userDB: IUser | null = await User.findById(
         { _id: userId },
         { email: 1, phone: 1, fullName: 1 }
       );
@@ -496,7 +494,7 @@ class UserController {
           message: "Phone is same!",
         });
 
-      const findUserHasTheSameNewValue: IUserSchema | null = await User.findOne(
+      const findUserHasTheSameNewValue: IUser | null = await User.findOne(
         {
           _id: { $ne: userId },
           [property]: newValue,
@@ -509,20 +507,19 @@ class UserController {
           message: `${property} already exists!`,
         });
 
-      const userUpdated: IUserSchema | null | any =
-        await User.findByIdAndUpdate(
-          {
-            _id: userId,
+      const userUpdated: IUser | null | any = await User.findByIdAndUpdate(
+        {
+          _id: userId,
+        },
+        {
+          $set: {
+            [property]: newValue,
           },
-          {
-            $set: {
-              [property]: newValue,
-            },
-          },
-          {
-            new: true,
-          }
-        );
+        },
+        {
+          new: true,
+        }
+      );
 
       res.status(200).json({
         message: `${property} updated with success!!!`,
@@ -582,7 +579,7 @@ class UserController {
         });
 
       // query of users that have newValue passed based on property
-      const findUserHasTheSameNewValue: IUserSchema | null = await User.findOne(
+      const findUserHasTheSameNewValue: IUser | null = await User.findOne(
         {
           _id: { $ne: userId },
           email: newEmail,
@@ -595,7 +592,7 @@ class UserController {
           message: `Email already exists!`,
         });
 
-      const userUpdated: IUserSchema | null = await User.findByIdAndUpdate(
+      const userUpdated: IUser | null = await User.findByIdAndUpdate(
         {
           _id: userId,
         },
@@ -710,7 +707,7 @@ class UserController {
       if (!userId || !password)
         return res.status(400).json({ message: "Data informed is invalid" });
 
-      const userDB: IUserSchema | null = await User.findById(userId, {
+      const userDB: IUser | null = await User.findById(userId, {
         password: 1,
       });
 
@@ -760,7 +757,7 @@ class UserController {
         this.saltRounds
       );
 
-      const userUpdated: IUserSchema | null = await User.findByIdAndUpdate(
+      const userUpdated: IUser | null = await User.findByIdAndUpdate(
         {
           _id: userId,
         },

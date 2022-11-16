@@ -8,7 +8,7 @@ import {
   IUserMakingActionOnChat,
 } from "./types";
 import UserController from "../../controllers/User";
-import { IUserSchema } from "../../models/User/types";
+import { IUser } from "../../models/User/types";
 import ChatController from "../../controllers/Chat/index";
 import { IMessageSchema } from "../../models/Message/types";
 
@@ -116,7 +116,7 @@ export default class GlobalSocket {
    */
   public static userUpdateProfileInfo = (data: {
     userId: string;
-    property: keyof IUserSchema;
+    property: keyof IUser;
     newValue: string;
   }) => {
     // emit to client that user is online

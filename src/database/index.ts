@@ -2,16 +2,26 @@ import mongoose from "mongoose";
 import Log from "../infra/Log";
 import EnviromentEnum from "../settings/enviroment/enviroment.enum";
 
-export default class SocialOneDataBase {
-  private urlDatabase: string = SocialOneDataBase.getUrlByEnviroment();
+export default class DataBase {
+  private static instance = new DataBase();
+
+  private constructor() {}
+
+  public static getInstance = (): DataBase => {
+    return DataBase.instance;
+  };
+
   public start = async (): Promise<void> => {
     try {
-      await mongoose.connect(this.urlDatabase, {
+      const databaseUrl: string = DataBase.getUrlByEnviroment();
+
+      await mongoose.connect(databaseUrl, {
         useNewUrlParser: true,
         useFindAndModify: false,
         useUnifiedTopology: true,
         useCreateIndex: true,
       });
+
       Log.success({ message: "Database connected..." });
     } catch (error: any) {
       Log.error({ message: `Error to connect database: ${error.message}` });
@@ -21,6 +31,7 @@ export default class SocialOneDataBase {
 
   private static getUrlByEnviroment = (): string => {
     const enviroment = process.env.NODE_ENV as EnviromentEnum.enviroment;
+
     switch (enviroment) {
       case EnviromentEnum.enviroment.PRODUCTION:
         return String(process.env.DB_ATLAS);
