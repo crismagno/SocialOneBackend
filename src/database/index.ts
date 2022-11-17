@@ -7,9 +7,7 @@ export default class DataBase {
 
   private constructor() {}
 
-  public static getInstance = (): DataBase => {
-    return DataBase.instance;
-  };
+  public static getInstance = (): DataBase => DataBase.instance;
 
   public start = async (): Promise<void> => {
     try {
@@ -24,18 +22,20 @@ export default class DataBase {
 
       Log.success({ message: "Database connected..." });
     } catch (error: any) {
-      Log.error({ message: `Error to connect database: ${error.message}` });
+      Log.error({
+        message: `Error when try to connect database: ${error.message}`,
+      });
       throw new Error(error);
     }
   };
 
   private static getUrlByEnviroment = (): string => {
-    const enviroment = process.env.NODE_ENV as EnviromentEnum.enviroment;
+    const enviroment = process.env.NODE_ENV as EnviromentEnum.Enviroment;
 
     switch (enviroment) {
-      case EnviromentEnum.enviroment.PRODUCTION:
+      case EnviromentEnum.Enviroment.PRODUCTION:
         return String(process.env.DB_ATLAS);
-      case EnviromentEnum.enviroment.DEVELOPMENT:
+      case EnviromentEnum.Enviroment.DEVELOPMENT:
         return String(process.env.DB_DEVELOPMENT);
       default:
         throw new Error("Error enviroment database: without env selected.");

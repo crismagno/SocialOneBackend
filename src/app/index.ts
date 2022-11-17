@@ -5,6 +5,7 @@ import GlobalSocket from "../infra/GlobalSocket";
 import SocialOneConsign from "../infra/SocialOneConsign";
 import http from "http";
 import ServerCluster from "../infra/ServerCluster";
+import CronSchedule from "../services/cron-shedule";
 
 export default class App {
   private readonly app: Express = express();
@@ -19,8 +20,13 @@ export default class App {
      * Note: Idea here is remove that method and create an method that do some things before start application
      */
     await UserController.updateSocketAllUsers();
+
     GlobalSocket.start(this.server);
+
     new SocialOneConsign(this.app).start();
+
     new ServerCluster(this.server).start();
+
+    CronSchedule.inactivateUsers();
   };
 }

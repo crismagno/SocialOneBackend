@@ -6,7 +6,6 @@ import { IUserPayloadToken } from "../../settings/token/types";
 import { isValidEmail } from "./../../helpers/global";
 import Email from "../../services/email";
 import Token from "../../settings/token";
-import { scheduleValidateUserActive } from "./../../services/schedule";
 import GlobalSocket from "../../infra/GlobalSocket";
 import UserEnum from "../../shared/user/user.enum";
 
@@ -148,9 +147,6 @@ class UserController {
         token: Token.generate(payload),
         role: user.role as UserEnum.Roles,
       };
-
-      // validate if user active account or delete user
-      scheduleValidateUserActive(user._id);
 
       await Email.emailWelcome(user);
 

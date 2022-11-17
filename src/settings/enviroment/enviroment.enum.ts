@@ -1,5 +1,5 @@
 namespace EnviromentEnum {
-  export enum enviroment {
+  export enum Enviroment {
     PRODUCTION = "PRODUCTION",
     DEVELOPMENT = "DEVELOPMENT",
     TEST = "TEST",

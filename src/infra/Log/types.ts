@@ -7,6 +7,7 @@ export enum EModules {
   SERVER = "SERVER",
   ROUTES = "ROUTES",
   MAIN = "MAIN",
+  CRON_SCHEDULE = "CRON_SCHEDULE",
 }
 
 export const ModulesLabels = {
@@ -18,6 +19,7 @@ export const ModulesLabels = {
   SERVER: "Server",
   ROUTES: "Routes",
   MAIN: "Main",
+  CronSchedule: "Cron Schedule",
 };
 
 export enum ELogColors {
