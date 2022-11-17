@@ -46,6 +46,10 @@ const User: Schema = new Schema(
       type: String,
       enum: Object.keys(UserEnum.Roles),
     },
+    status: {
+      type: String,
+      enum: Object.keys(UserEnum.Status),
+    },
   },
   {
     timestamps: true,

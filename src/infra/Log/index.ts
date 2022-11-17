@@ -20,7 +20,7 @@ export default class Log {
     module?: EModules | string;
     logColor?: LogColorsStatus;
   }): void => {
-    if (process.env.NODE_ENV === EnviromentEnum.enviroment.DEVELOPMENT) {
+    if (process.env.NODE_ENV === EnviromentEnum.Enviroment.DEVELOPMENT) {
       const finalMessage = `
         -------------------------------------------------------
         Module: ${module}

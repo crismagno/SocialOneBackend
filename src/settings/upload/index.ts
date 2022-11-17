@@ -1,7 +1,7 @@
 import multer from "multer";
 import Log from "../../infra/Log";
 
-const Storage = multer.diskStorage({
+const Storage: multer.StorageEngine = multer.diskStorage({
   destination(req, file, callback) {
     try {
       callback(null, `${__dirname}/../../uploads`);
@@ -20,4 +20,4 @@ const Storage = multer.diskStorage({
   },
 });
 
-export const upload = multer({ storage: Storage });
+export const upload: multer.Multer = multer({ storage: Storage });

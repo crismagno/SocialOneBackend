@@ -14,4 +14,5 @@ export interface IUser extends Document {
   updatedAt?: Date;
   emailChange?: string | null;
   role: UserEnum.Roles;
+  status: UserEnum.Status;
 }

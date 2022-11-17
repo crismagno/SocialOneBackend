@@ -18,6 +18,10 @@ namespace UserEnum {
     NORMAL = "NORMAL",
     MASTER = "MASTER",
   }
+
+  export enum Status {
+    INACTIVE = "INACTIVE",
+  }
 }
 
 export default UserEnum;
