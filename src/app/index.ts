@@ -20,9 +20,13 @@ export default class App {
      * Note: Idea here is remove that method and create an method that do some things before start application
      */
     await UserController.updateSocketAllUsers();
+
     GlobalSocket.start(this.server);
+
     new SocialOneConsign(this.app).start();
+
     new ServerCluster(this.server).start();
+
     CronSchedule.inactivateUsers();
   };
 }
