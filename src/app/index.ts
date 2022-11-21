@@ -9,13 +9,14 @@ import CronSchedule from "../services/cron-shedule";
 
 export default class App {
   private readonly app: Express = express();
+
   private readonly server: http.Server = http.createServer(this.app);
+
   private readonly dataBaseInstance: DataBase = DataBase.getInstance();
 
   public start = async (): Promise<void> => {
     await this.dataBaseInstance.start();
     /**
-     * -> await UserController.updateSocketAllUsers()
      * Remove all sockets of users and set online to false
      * Note: Idea here is remove that method and create an method that do some things before start application
      */

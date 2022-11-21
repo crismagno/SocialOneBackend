@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 import { ICodeSchema } from "./types";
-import CodeEnum from "./code.enum";
+import CodeEnum from "../../shared/code/code.enum";
 
 const CodeSchema: Schema = new Schema(
   {

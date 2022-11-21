@@ -7,7 +7,7 @@ import User from "../../models/User";
 import { ICodeSchema, TCode } from "../../models/Code/types";
 import { IUser } from "../../models/User/types";
 import GlobalSocket from "../../infra/GlobalSocket";
-import CodeEnum from "../../models/Code/code.enum";
+import CodeEnum from "../../shared/code/code.enum";
 
 class CodeController {
   private lengthCode: number = 4;

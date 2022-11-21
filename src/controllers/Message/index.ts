@@ -12,10 +12,11 @@ class MessageController {
     res: Response
   ): Promise<void | Response> => {
     try {
-      let { userId, chatId, message = null, message_id_temp } = req.body;
+      let { userId, chatId, message, message_id_temp } = req.body;
 
-      if (!userId || !chatId || !message || !message_id_temp)
+      if (!userId || !chatId || !message || !message_id_temp) {
         return res.status(400).json({ message: "Error body request invalid" });
+      }
 
       userId = Types.ObjectId(userId);
       chatId = Types.ObjectId(chatId);
@@ -23,8 +24,8 @@ class MessageController {
       const messageToCreate: IMessageCreateSchema = {
         chat: chatId,
         userSent: userId,
-        value: message?.value,
-        reply: message?.reply || null,
+        value: message.value,
+        reply: message.reply || null,
         type: message.type,
         seenUsers: [userId],
         delivery: "send",
