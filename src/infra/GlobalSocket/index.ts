@@ -11,6 +11,9 @@ import UserController from "../../controllers/User";
 import { IUser } from "../../models/User/types";
 import ChatController from "../../controllers/Chat/index";
 import { IMessageSchema } from "../../models/Message/types";
+import GlobalSocketEnum from "../../shared/global-socket/global-socket.enum";
+import Log from "../Log";
+import { EModules } from "../Log/types";
 
 export default class GlobalSocket {
   public static io: Socket;
@@ -27,108 +30,110 @@ export default class GlobalSocket {
         },
       });
 
-      GlobalSocket.io.on("connection", (socket: any) => {
+      GlobalSocket.io.on(GlobalSocketEnum.UrlsOn.CONNECTION, (socket: any) => {
         // informa o usuário online
-        socket.on(`inform-user-online`, (data: IInformUserOnline): void => {
-          // update property database user
-          UserController.connectUserUpdateOnlineAndSocketId(
-            data.userId,
-            data.socketId
-          );
+        socket.on(
+          GlobalSocketEnum.UrlsOn.INFORM_USER_ONLINE,
+          (data: IInformUserOnline): void => {
+            // update property database user
+            UserController.connectUserUpdateOnlineAndSocketId(
+              data.userId,
+              data.socketId
+            );
 
-          // emit to client that user is online
-          GlobalSocket.io
-            .compress(true)
-            .emit(`inform-user-is-online`, data.userId);
-        });
+            // emit to client that user is online
+            GlobalSocket.io
+              .compress(true)
+              .emit(
+                GlobalSocketEnum.UrlsEmit.INFORM_USER_IS_ONLINE,
+                data.userId
+              );
+          }
+        );
 
         // inform that user is typing
         socket.on(
-          "user-is-making-action-on-chat",
+          GlobalSocketEnum.UrlsOn.USER_IS_MAKING_ACTION_ON_CHAT,
           (data: IUserMakingActionOnChat) => {
             GlobalSocket.userIsMakingActionOnChat(data);
           }
         );
 
         // atualizar o seen da mensagem setando o usuario
-        socket.on("set-seen-on-message-chat", (data: ISetSeenOnMessageChat) => {
-          ChatController.setIdUserOnSeenMessageSingle(data);
-        });
+        socket.on(
+          GlobalSocketEnum.UrlsOn.SET_SEEN_ON_MESSAGE_CHAT,
+          (data: ISetSeenOnMessageChat) => {
+            ChatController.setIdUserOnSeenMessageSingle(data);
+          }
+        );
 
         // when sockets disconnect
-        socket.on("disconnect", async () => {
+        socket.on(GlobalSocketEnum.UrlsOn.DISCONNECT, async () => {
           const userDisconnected =
             await UserController.disconnectUserUpdateBySocketId(socket.id);
+
           // verify if user was updated and found
           if (userDisconnected && userDisconnected?.socketId?.length === 0) {
             GlobalSocket.informUserOffLine(userDisconnected._id);
           }
         });
       });
-      console.log(`Socket running with success...`);
-    } catch (error) {
-      console.error(`Socket is with error: `, error);
+
+      Log.success({
+        message: "Socket running with success...",
+        module: EModules.GLOBAL_SOCKET,
+      });
+    } catch (error: any) {
+      Log.error({
+        message: `Socket is with error: ${error.message}`,
+        module: EModules.GLOBAL_SOCKET,
+      });
     }
   };
 
-  /**
-   * socket that identify tha creation of new chat
-   * @param creator {String}
-   * @param person {string}
-   * @param chatCreated {any}
-   */
   public static createChat(creator: string, person: string, chatCreated: any) {
     // user that create chat
     GlobalSocket.io
       .compress(true)
-      .emit(`create-chat-send-to-creator-${creator}`, chatCreated);
+      .emit(
+        `${GlobalSocketEnum.UrlsEmit.CREATE_CHAT_SEND_TO_CREATOR}${creator}`,
+        chatCreated
+      );
 
     // user that was solicited chat
     GlobalSocket.io
       .compress(true)
-      .emit(`create-chat-send-to-person-${person}`, chatCreated);
+      .emit(
+        `${GlobalSocketEnum.UrlsEmit.CREATE_CHAT_SEND_TO_PERSON}${person}`,
+        chatCreated
+      );
   }
 
-  /**
-   * Socket that infor user offline
-   * @param userId
-   */
   public static informUserOffLine = (userId: string) => {
-    // emit to client that user is online
-    GlobalSocket.io.compress(true).emit(`inform-user-is-offline`, userId);
+    GlobalSocket.io
+      .compress(true)
+      .emit(GlobalSocketEnum.UrlsEmit.INFORM_USER_IS_OFFLINE, userId);
   };
 
-  /**
-   * Socket that infor user alter avatar
-   * @param data
-   */
   public static informUserAlterAvatar = (data: {
     userId: string;
     avatar: string;
   }) => {
-    // emit to client that user is online
-    GlobalSocket.io.compress(true).emit(`inform-user-alter-avatar`, data);
+    GlobalSocket.io
+      .compress(true)
+      .emit(GlobalSocketEnum.UrlsEmit.INFORM_USER_CHANGED, data);
   };
 
-  /**
-   * Socket that inform user update profile info
-   * @param data
-   */
   public static userUpdateProfileInfo = (data: {
     userId: string;
     property: keyof IUser;
     newValue: string;
   }) => {
-    // emit to client that user is online
     GlobalSocket.io
       .compress(true)
-      .emit(`inform-user-update-profile-info`, data);
+      .emit(GlobalSocketEnum.UrlsEmit.INFORM_USER_UPDATED_PROFILE_INFO, data);
   };
 
-  /**
-   * Socket that send message created by chat
-   * @param data
-   */
   public static messageCreatedBychatId = (data: {
     userId: string;
     chatId: string;
@@ -137,13 +142,9 @@ export default class GlobalSocket {
   }) => {
     GlobalSocket.io
       .compress(true)
-      .emit(`message-created-by-chat-id-home`, data);
+      .emit(GlobalSocketEnum.UrlsEmit.MESSAGE_CREATED_BY_CHAT_ID_HOME, data);
   };
 
-  /**
-   * Socket that send messags updated
-   * @param data
-   */
   public static messagesUpdatedBychatId = (data: {
     userId: string;
     chatId: string;
@@ -151,25 +152,20 @@ export default class GlobalSocket {
   }) => {
     GlobalSocket.io
       .compress(true)
-      .emit(`messages-updated-by-chat-id-home`, data);
+      .emit(GlobalSocketEnum.UrlsEmit.MESSAGES_UPDATED_BY_CHAT_ID_HOME, data);
   };
 
-  /**
-   * Socket that inform action of user on chat, with typing, or record audio or video
-   * @param data
-   */
   public static userIsMakingActionOnChat = (
     data: IUserMakingActionOnChat
   ): void => {
     GlobalSocket.io
       .compress(true)
-      .emit(`user-is-making-action-on-chat-by-home`, data);
+      .emit(
+        GlobalSocketEnum.UrlsEmit.USER_IS_MAKING_ACTION_ON_CHAT_BY_HOME,
+        data
+      );
   };
 
-  /**
-   * Socket that inform update seen of messages of userId
-   * @param data
-   */
   public static setIdUserOnSeenMessages = (data: ISetIdUserOnSeenMessages) => {
     // dados que serap passados para o emit do socket
     const dataSendSocket = { ...data };
@@ -182,7 +178,10 @@ export default class GlobalSocket {
     for (const userId of data?.usersChat) {
       GlobalSocket.io
         .compress(true)
-        .emit(`set-seen-messages-by-home-${userId}`, dataSendSocket);
+        .emit(
+          `${GlobalSocketEnum.UrlsEmit.SET_SEEN_MESSAGES_BY_HOME}${userId}`,
+          dataSendSocket
+        );
     }
   };
 }

@@ -1,4 +1,4 @@
-import CodeEnum from "../../models/Code/code.enum";
+import CodeEnum from "../../shared/code/code.enum";
 import Code from "../../controllers/Code";
 import { IUser } from "../../models/User/types";
 import {

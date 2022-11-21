@@ -1,7 +1,9 @@
+import UserEnum from "../../shared/user/user.enum";
 import { Request, Response } from "express";
+import MainEnum from "../../shared/main/main.enum";
 const compression = require("compression");
 
-// Method that valid if request has compress
+// Method that valid if request should be compressed
 export const shouldCompress = (req: Request, res: Response) => {
   if (req.headers["x-no-compression"]) {
     // don't compress responses with this request header
@@ -13,9 +15,9 @@ export const shouldCompress = (req: Request, res: Response) => {
 
 export const publicRoutes = {
   path: [
-    "/",
-    "/user/signin",
-    "/user/signup",
+    MainEnum.Urls.INITIAL,
+    UserEnum.Urls.SIGN_IN,
+    UserEnum.Urls.SIGN_UP,
     // "/code/validate",
     /^\/files\/.*/,
     // "/chat",
