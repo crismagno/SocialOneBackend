@@ -25,6 +25,7 @@ export default class DataBase {
       Log.error({
         message: `Error when try to connect database: ${error.message}`,
       });
+
       throw new Error(error);
     }
   };
